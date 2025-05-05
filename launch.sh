@@ -14,12 +14,17 @@ VENV_DIR="venv"
 
 # Parse command line arguments
 CONFIG_MODE=false
+GUI_MODE=false
 HELP_MODE=false
 
 for arg in "$@"; do
   case $arg in
     --config|-c)
       CONFIG_MODE=true
+      shift
+      ;;
+    --gui|-g)
+      GUI_MODE=true
       shift
       ;;
     --help|-h)
@@ -38,7 +43,8 @@ if [ "$HELP_MODE" = true ]; then
   echo "Usage: ./launch.sh [options]"
   echo ""
   echo "Options:"
-  echo "  -c, --config    Launch in gamepad configuration mode"
+  echo "  -c, --config    Launch in gamepad configuration mode (terminal UI)"
+  echo "  -g, --gui       Launch the graphical configuration interface"
   echo "  -h, --help      Display this help message"
   echo ""
   echo "This script sets up a virtual environment and launches the gamepad2car application."
@@ -108,8 +114,11 @@ fi
 # Launch the application
 echo -e "${YELLOW}Launching Gamepad2Car application...${NC}"
 
-if [ "$CONFIG_MODE" = true ]; then
-    echo -e "${CYAN}Running in configuration mode${NC}"
+if [ "$GUI_MODE" = true ]; then
+    echo -e "${CYAN}Running in graphical configuration mode${NC}"
+    ./gamepad_gui.py
+elif [ "$CONFIG_MODE" = true ]; then
+    echo -e "${CYAN}Running in terminal configuration mode${NC}"
     ./gamepad2car.py --config
 else
     ./gamepad2car.py
