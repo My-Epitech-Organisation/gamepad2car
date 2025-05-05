@@ -1,0 +1,5 @@
+pygame>=2.6.1
+pyvesc>=1.0.5
+pyserial>=3.5
+keyboard>=0.13.5
+PyCRC>=0.10.0
