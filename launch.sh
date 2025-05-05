@@ -6,13 +6,47 @@
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 RED='\033[0;31m'
+CYAN='\033[0;36m'
 NC='\033[0m' # No Color
-
-echo -e "${YELLOW}=== Gamepad2Car Launcher ===${NC}"
-echo "Setting up virtual environment and launching application..."
 
 # Define the virtual environment directory
 VENV_DIR="venv"
+
+# Parse command line arguments
+CONFIG_MODE=false
+HELP_MODE=false
+
+for arg in "$@"; do
+  case $arg in
+    --config|-c)
+      CONFIG_MODE=true
+      shift
+      ;;
+    --help|-h)
+      HELP_MODE=true
+      shift
+      ;;
+    *)
+      # Unknown option
+      ;;
+  esac
+done
+
+# Display help if requested
+if [ "$HELP_MODE" = true ]; then
+  echo -e "${CYAN}=== Gamepad2Car Launcher ===${NC}"
+  echo "Usage: ./launch.sh [options]"
+  echo ""
+  echo "Options:"
+  echo "  -c, --config    Launch in gamepad configuration mode"
+  echo "  -h, --help      Display this help message"
+  echo ""
+  echo "This script sets up a virtual environment and launches the gamepad2car application."
+  exit 0
+fi
+
+echo -e "${CYAN}=== Gamepad2Car Launcher ===${NC}"
+echo "Setting up virtual environment and launching application..."
 
 # Create virtual environment if it doesn't exist
 if [ ! -d "$VENV_DIR" ]; then
@@ -57,23 +91,29 @@ if [ -e "$VESC_PORT" ]; then
         sudo chmod 666 $VESC_PORT
     fi
 else
-    echo -e "${RED}VESC device not found at $VESC_PORT${NC}"
-    echo "Please check connection and try again."
-    echo "If your VESC is connected to a different port, edit the VESC_PORT variable in this script."
+    echo -e "${YELLOW}VESC device not found at $VESC_PORT${NC}"
+    echo "If your VESC is connected to a different port, you can configure it in the settings."
+    echo "You can still configure your gamepad without a VESC connected."
 fi
 
 # Check for gamepad
-echo -e "${YELLOW}Checking for Logitech F710 gamepad...${NC}"
+echo -e "${YELLOW}Checking for gamepad...${NC}"
 if [ -e "/dev/input/js0" ]; then
     echo -e "${GREEN}Gamepad device found.${NC}"
 else
-    echo -e "${RED}Gamepad device not found. Please connect your Logitech F710 gamepad.${NC}"
-    echo "Make sure the gamepad is in DirectInput mode (D) and the switch is set to ON."
+    echo -e "${YELLOW}Gamepad device not found. Please connect your gamepad.${NC}"
+    echo "Make sure the gamepad is powered on and properly connected."
 fi
 
 # Launch the application
 echo -e "${YELLOW}Launching Gamepad2Car application...${NC}"
-./gamepad2car.py
+
+if [ "$CONFIG_MODE" = true ]; then
+    echo -e "${CYAN}Running in configuration mode${NC}"
+    ./gamepad2car.py --config
+else
+    ./gamepad2car.py
+fi
 
 # Deactivate virtual environment on exit
 deactivate
