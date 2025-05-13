@@ -11,6 +11,11 @@ This module provides:
 
 import os
 import json
+# Set environment variables to prevent D-Bus issues BEFORE importing pygame
+os.environ["SDL_AUDIODRIVER"] = "dummy"
+os.environ["SDL_DBUS_SCREENSAVER_INHIBIT"] = "0"
+os.environ["SDL_VIDEODRIVER"] = "dummy"  # Prevent display initialization issues
+
 import pygame
 import time
 import sys
@@ -71,11 +76,17 @@ class GamepadConfig:
         self.joystick = None
 
         print(f"{Colors.GREEN}Gamepad configuration initialized{Colors.RESET}")
-        # Initialize only the pygame modules we need, avoiding audio/D-Bus issues
-        pygame.display.init()
-        print(f"{Colors.GREEN}Pygame display module initialized{Colors.RESET}")
-        pygame.joystick.init()
-        print(f"{Colors.GREEN}Pygame joystick module initialized{Colors.RESET}")
+        # Initialize only joystick subsystem, avoid display/audio to prevent D-Bus issues
+        if not pygame.get_init():
+            pygame.init()
+            # Immediately quit any potentially problematic subsystems
+            pygame.mixer.quit()
+            print(f"{Colors.GREEN}Pygame initialized with limited subsystems{Colors.RESET}")
+        
+        # Make sure joystick module is initialized
+        if not pygame.joystick.get_init():
+            pygame.joystick.init()
+            print(f"{Colors.GREEN}Pygame joystick module initialized{Colors.RESET}")
 
     def load_config(self):
         """Load configuration from file or create default config"""
@@ -283,18 +294,14 @@ class GamepadConfig:
 
     def run_calibration_menu(self):
         """Run the main calibration menu"""
-        # Initialize only the necessary subsystems if not already done
-        if not pygame.display.get_init():
-            pygame.display.init()
-        if not pygame.joystick.get_init():
-            pygame.joystick.init()
-
         # Add environment variables to prevent D-Bus issues
         os.environ["SDL_AUDIODRIVER"] = "dummy"
         os.environ["SDL_DBUS_SCREENSAVER_INHIBIT"] = "0"
+        os.environ["SDL_VIDEODRIVER"] = "dummy"
 
-        pygame.display.set_mode((320, 240))
-        pygame.display.set_caption("Gamepad Calibration")
+        # Initialize joystick if not already done
+        if not pygame.joystick.get_init():
+            pygame.joystick.init()
 
         if not self.connect_gamepad():
             print("Please connect a gamepad and restart the calibration.")
