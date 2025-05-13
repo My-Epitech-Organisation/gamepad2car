@@ -16,7 +16,8 @@ import serial.tools.list_ports
 from serial import Serial, SerialException
 import pyvesc
 import argparse
-from pyvesc import SetDutyCycle, SetRPM, SetCurrent, SetCurrentBrake
+from pyvesc import encode
+from pyvesc.VESC.messages.setters import SetDutyCycle, SetRPM, SetCurrent, SetCurrentBrake, SetServoPosition
 from gamepad_config import GamepadConfig, Colors
 import logging
 
@@ -150,8 +151,36 @@ class GamepadController:
                 msg = SetDutyCycle(scaled_value)
 
             # Encode and send the message
-            packet = pyvesc.encode(msg)
+            packet = encode(msg)
             self.serial_conn.write(packet)
+
+            # Envoyer la commande pour le servomoteur (contrôle de direction)
+            if 'servo' in self.config and self.config['servo']['enabled']:
+                # Obtenir les paramètres du servomoteur
+                center_position = self.config['servo']['center_position']
+                min_position = self.config['servo']['min_position']
+                max_position = self.config['servo']['max_position']
+                invert_direction = self.config['servo']['invert_direction']
+
+                # Appliquer l'inversion de direction si nécessaire
+                steering_value = self.steering
+                if invert_direction:
+                    steering_value = -steering_value
+
+                # Convertir la valeur du joystick (-1.0 à 1.0) en position de servo (0.0 à 1.0)
+                # Tenir compte de la position centrale et des limites
+                if steering_value < 0:  # Tourner à gauche
+                    servo_pos = center_position + (steering_value * (center_position - min_position))
+                else:  # Tourner à droite ou tout droit
+                    servo_pos = center_position + (steering_value * (max_position - center_position))
+
+                # Limiter la position aux bornes min/max
+                servo_pos = max(min_position, min(servo_pos, max_position))
+
+                # Créer et envoyer le message de position de servo
+                servo_msg = SetServoPosition(servo_pos)
+                servo_packet = encode(servo_msg)
+                self.serial_conn.write(servo_packet)
 
         except Exception as e:
             print(f"{Colors.RED}Error sending command to VESC: {e}{Colors.RESET}")
@@ -208,10 +237,18 @@ class GamepadController:
             try:
                 max_current = self.config['performance']['max_current']
                 msg = SetCurrentBrake(max_current)
-                packet = pyvesc.encode(msg)
+                packet = encode(msg)
                 self.serial_conn.write(packet)
                 time.sleep(0.1)  # Short delay to ensure brake is applied
                 self.send_to_vesc(0.0)
+
+                # Center steering servo in emergency
+                if 'servo' in self.config and self.config['servo']['enabled']:
+                    center_position = self.config['servo']['center_position']
+                    servo_msg = SetServoPosition(center_position)
+                    servo_packet = encode(servo_msg)
+                    self.serial_conn.write(servo_packet)
+
             except Exception as e:
                 print(f"{Colors.RED}Error applying emergency brake: {e}{Colors.RESET}")
 
@@ -288,12 +325,23 @@ class GamepadController:
         print(f"Control mode: {self.config['performance']['control_mode']}")
         print(f"{Colors.YELLOW}Controls:{Colors.RESET}")
         print("  Throttle/Brake: Mapped in configuration")
-        print("  Steering: Mapped in configuration")
+        print("  Steering: Mapped in configuration (contrôle du servomoteur sur pin PB5)")
         print("  A Button: Boost (temporary speed increase)")
         print("  X Button: Toggle reverse gear")
         print("  B Button: Emergency stop")
         print("  Y Button: Toggle cruise control")
         print("  Ctrl+C: Quit")
+
+        # Afficher les informations du servomoteur si activé
+        if 'servo' in self.config and self.config['servo']['enabled']:
+            print(f"\n{Colors.YELLOW}Servo Control (Enabled):{Colors.RESET}")
+            print(f"  Center: {self.config['servo']['center_position']}")
+            print(f"  Range: {self.config['servo']['min_position']} (left) to {self.config['servo']['max_position']} (right)")
+            print(f"  Direction: {'Inverted' if self.config['servo']['invert_direction'] else 'Normal'}")
+        else:
+            print(f"\n{Colors.RED}Servo Control: Disabled{Colors.RESET}")
+            print("  Use --config option and select 'Configure Servo Settings' to enable steering control")
+
         print(f"{Colors.YELLOW}Tip: Run with --config to calibrate your gamepad{Colors.RESET}")
         print("-" * 50)
 

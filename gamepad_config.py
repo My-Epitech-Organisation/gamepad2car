@@ -51,6 +51,14 @@ DEFAULT_CONFIG = {
         "control_mode": "duty_cycle",  # Options: 'duty_cycle', 'rpm', 'current'
         "boost_multiplier": 1.5,  # Multiplier when boost button is pressed
         "cruise_increment": 0.05, # Increment for cruise control
+    },
+    # Servo settings
+    "servo": {
+        "enabled": True,          # Active le contrôle du servomoteur
+        "center_position": 0.5,   # Position centrale (tout droit)
+        "min_position": 0.0,      # Position minimale (complètement à gauche)
+        "max_position": 1.0,      # Position maximale (complètement à droite)
+        "invert_direction": False, # Inverser la direction du servo
     }
 }
 
@@ -88,7 +96,7 @@ class GamepadConfig:
                 # Module not available, ignore error
                 pass
             print(f"{Colors.GREEN}Pygame initialized with limited subsystems{Colors.RESET}")
-        
+
         # Make sure joystick module is initialized
         if not pygame.joystick.get_init():
             pygame.joystick.init()
@@ -298,6 +306,58 @@ class GamepadConfig:
 
         return False
 
+    def configure_servo_settings(self):
+        """Configure the servo settings"""
+        print(f"\n{Colors.CYAN}{Colors.BOLD}Configuration du Servomoteur{Colors.RESET}")
+
+        print(f"\nActiver le contrôle du servomoteur? (actuellement: {'activé' if self.config['servo']['enabled'] else 'désactivé'}) (o/n):")
+        choice = input().strip().lower()
+        if choice == 'o' or choice == 'oui' or choice == 'y' or choice == 'yes':
+            self.config['servo']['enabled'] = True
+        elif choice == 'n' or choice == 'non' or choice == 'no':
+            self.config['servo']['enabled'] = False
+            print("Contrôle du servomoteur désactivé.")
+            return
+
+        print(f"\nEntrer la position centrale (direction tout droit, 0.0-1.0, actuellement: {self.config['servo']['center_position']}):")
+        try:
+            value = float(input().strip())
+            if 0.0 <= value <= 1.0:
+                self.config['servo']['center_position'] = value
+            else:
+                print(f"{Colors.RED}Valeur invalide. Doit être entre 0.0 et 1.0{Colors.RESET}")
+        except ValueError:
+            print(f"{Colors.RED}Entrée invalide. Veuillez entrer un nombre.{Colors.RESET}")
+
+        print(f"\nEntrer la position minimale (complètement à gauche, 0.0-1.0, actuellement: {self.config['servo']['min_position']}):")
+        try:
+            value = float(input().strip())
+            if 0.0 <= value <= 1.0:
+                self.config['servo']['min_position'] = value
+            else:
+                print(f"{Colors.RED}Valeur invalide. Doit être entre 0.0 et 1.0{Colors.RESET}")
+        except ValueError:
+            print(f"{Colors.RED}Entrée invalide. Veuillez entrer un nombre.{Colors.RESET}")
+
+        print(f"\nEntrer la position maximale (complètement à droite, 0.0-1.0, actuellement: {self.config['servo']['max_position']}):")
+        try:
+            value = float(input().strip())
+            if 0.0 <= value <= 1.0:
+                self.config['servo']['max_position'] = value
+            else:
+                print(f"{Colors.RED}Valeur invalide. Doit être entre 0.0 et 1.0{Colors.RESET}")
+        except ValueError:
+            print(f"{Colors.RED}Entrée invalide. Veuillez entrer un nombre.{Colors.RESET}")
+
+        print(f"\nInverser la direction du servomoteur? (actuellement: {'inversé' if self.config['servo']['invert_direction'] else 'normal'}) (o/n):")
+        choice = input().strip().lower()
+        if choice == 'o' or choice == 'oui' or choice == 'y' or choice == 'yes':
+            self.config['servo']['invert_direction'] = True
+        elif choice == 'n' or choice == 'non' or choice == 'no':
+            self.config['servo']['invert_direction'] = False
+
+        print(f"\n{Colors.GREEN}Paramètres du servomoteur mis à jour.{Colors.RESET}")
+
     def run_calibration_menu(self):
         """Run the main calibration menu"""
         # Add environment variables to prevent D-Bus issues
@@ -310,7 +370,45 @@ class GamepadConfig:
             pygame.joystick.init()
 
         if not self.connect_gamepad():
-            print("Please connect a gamepad and restart the calibration.")
+            print("No gamepad found for live testing.")
+            print("You can still configure settings that don't require a gamepad.")
+
+            # Simplified menu when no gamepad is connected
+            running = True
+            while running:
+                # Clear the screen
+                os.system('cls' if os.name == 'nt' else 'clear')
+
+                print(f"\n{Colors.CYAN}{Colors.BOLD}=== Configuration Menu (No Gamepad) ==={Colors.RESET}")
+                print(f"{Colors.YELLOW}1. Set Max Duty Cycle{Colors.RESET}")
+                print(f"{Colors.YELLOW}2. Set Control Mode{Colors.RESET}")
+                print(f"{Colors.YELLOW}3. Configure Servo Settings{Colors.RESET}")
+                print(f"{Colors.YELLOW}4. Save Configuration{Colors.RESET}")
+                print(f"{Colors.YELLOW}5. Reset to Default Configuration{Colors.RESET}")
+                print(f"{Colors.YELLOW}0. Exit{Colors.RESET}")
+
+                choice = input("\nEnter your choice: ").strip()
+
+                if choice == "1":
+                    self.set_performance("max_duty_cycle")
+                elif choice == "2":
+                    self.set_performance("control_mode")
+                elif choice == "3":
+                    self.configure_servo_settings()
+                elif choice == "4":
+                    self.save_config()
+                elif choice == "5":
+                    self.config = DEFAULT_CONFIG.copy()
+                    print(f"{Colors.YELLOW}Configuration reset to defaults{Colors.RESET}")
+                elif choice == "0":
+                    running = False
+                else:
+                    print(f"{Colors.RED}Invalid choice. Please try again.{Colors.RESET}")
+
+                if running:
+                    input("\nPress Enter to continue...")
+
+            print(f"{Colors.GREEN}Configuration complete!{Colors.RESET}")
             return
 
         self.display_gamepad_info()
@@ -335,6 +433,7 @@ class GamepadConfig:
             print(f"{Colors.YELLOW}12. Test Current Configuration{Colors.RESET}")
             print(f"{Colors.YELLOW}13. Save Configuration{Colors.RESET}")
             print(f"{Colors.YELLOW}14. Reset to Default Configuration{Colors.RESET}")
+            print(f"{Colors.YELLOW}15. Configure Servo Settings{Colors.RESET}")
             print(f"{Colors.YELLOW}0. Exit{Colors.RESET}")
 
             choice = input("\nEnter your choice: ").strip()
@@ -368,6 +467,8 @@ class GamepadConfig:
             elif choice == "14":
                 self.config = DEFAULT_CONFIG.copy()
                 print(f"{Colors.YELLOW}Configuration reset to defaults{Colors.RESET}")
+            elif choice == "15":
+                self.configure_servo_settings()
             elif choice == "0":
                 running = False
             else:
@@ -402,6 +503,14 @@ class GamepadConfig:
         invert_throttle = self.config["calibration"]["invert_throttle"]
         invert_steering = self.config["calibration"]["invert_steering"]
 
+        # Servo settings
+        servo_enabled = self.config["servo"]["enabled"] if "servo" in self.config else False
+        if servo_enabled:
+            center_position = self.config["servo"]["center_position"]
+            min_position = self.config["servo"]["min_position"]
+            max_position = self.config["servo"]["max_position"]
+            invert_direction = self.config["servo"]["invert_direction"]
+
         testing = True
         clock = pygame.time.Clock()
 
@@ -431,13 +540,30 @@ class GamepadConfig:
             else:
                 steering = raw_steering
 
+            # Calculate servo position if servo is enabled
+            servo_pos = "N/A"
+            if servo_enabled:
+                steering_value = steering
+                if invert_direction:
+                    steering_value = -steering_value
+
+                # Map steering to servo range
+                if steering_value < 0:  # Turn left
+                    servo_pos = center_position + (steering_value * (center_position - min_position))
+                else:  # Turn right or straight
+                    servo_pos = center_position + (steering_value * (max_position - center_position))
+
+                # Ensure within bounds
+                servo_pos = max(min_position, min(servo_pos, max_position))
+                servo_pos = round(servo_pos, 2)
+
             # Get button states
             e_stop = self.joystick.get_button(emergency_btn)
             boost = self.joystick.get_button(boost_btn)
             reverse = self.joystick.get_button(reverse_btn)
 
             # Clear the line and print the current values
-            print(f"\rThrottle: {throttle:+.2f} | Steering: {steering:+.2f} | E-Stop: {'ON' if e_stop else 'off'} | Boost: {'ON' if boost else 'off'} | Reverse: {'ON' if reverse else 'off'}", end="")
+            print(f"\rThrottle: {throttle:+.2f} | Steering: {steering:+.2f} | Servo: {servo_pos} | E-Stop: {'ON' if e_stop else 'off'} | Boost: {'ON' if boost else 'off'} | Reverse: {'ON' if reverse else 'off'}", end="")
 
             clock.tick(30)  # 30 FPS
 
