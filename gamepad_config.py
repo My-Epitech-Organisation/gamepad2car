@@ -70,9 +70,11 @@ class GamepadConfig:
         self.config = self.load_config()
         self.joystick = None
 
+        print(f"{Colors.GREEN}Gamepad configuration initialized{Colors.RESET}")
         # Initialize pygame for the configuration interface
         pygame.init()
         pygame.joystick.init()
+        print(f"{Colors.GREEN}Pygame initialized{Colors.RESET}")
 
     def load_config(self):
         """Load configuration from file or create default config"""
