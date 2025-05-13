@@ -33,7 +33,7 @@ class GamepadController:
 
         # Control state variables
         self.throttle = 0.0
-        self.steering = 0.0
+        self.steering = 0.0  # Initialize steering to 0
         self.in_reverse_gear = False
         self.cruise_control_active = False
         self.cruise_control_speed = 0.0
@@ -47,6 +47,9 @@ class GamepadController:
             self.config_manager.run_calibration_menu()
             return
         logging.debug("Calibration menu completed")
+        
+        # Settings from configuration
+        self.config = self.config_manager.config
 
         # Initialize PyGame for controller input
         logging.debug("About to initialize pygame modules")
@@ -166,9 +169,14 @@ class GamepadController:
             max_steering_angle = self.config['performance'].get('max_steering_angle', 1.0)
             
             # Scale the steering value (-1.0 to 1.0) to the appropriate range for SetPosition
-            # Typically the middle position is 0, and max left/right are negative/positive values
-            # Multiply by 1000000 as required by VESC protocol for the SetPosition command
-            scaled_position = int(steering_value * max_steering_angle * 1000000)
+            # Limit to the range that fits in a 32-bit signed integer
+            # SetPosition expects a value between -1.0 and 1.0 multiplied by 1000000
+            # Make sure we stay within int32 limits (-2147483648 to 2147483647)
+            scaled_value = steering_value * max_steering_angle
+            # Clamp the value to ensure it stays within bounds
+            scaled_value = max(-0.9, min(0.9, scaled_value))
+            # Now multiply by 1000000 as required by VESC protocol for the SetPosition command
+            scaled_position = int(scaled_value * 1000000)
             
             # Create the SetPosition message
             msg = SetPosition(scaled_position)
@@ -283,7 +291,13 @@ class GamepadController:
                 self.throttle = self.config_manager.get_control_value("throttle")
 
             # Steering control
-            self.steering = self.config_manager.get_control_value("steering")
+            steering_raw = self.config_manager.get_control_value("steering")
+            # Apply deadzone and make sure we get a clean zero when not touching the controller
+            deadzone = self.config['calibration'].get('steering_deadzone', 0.05)
+            if abs(steering_raw) < deadzone:
+                self.steering = 0.0
+            else:
+                self.steering = steering_raw
 
         except Exception as e:
             print(f"{Colors.RED}Error reading gamepad: {e}{Colors.RESET}")
@@ -333,6 +347,9 @@ class GamepadController:
 
                 # Send commands to VESC
                 self.send_to_vesc(self.throttle)
+                
+                # Only send steering commands if there's an actual steering input
+                # This prevents unnecessary commands when the joystick is centered
                 self.send_steering_to_vesc(self.steering)
 
                 # Display current values (but not too frequently)
