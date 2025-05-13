@@ -16,7 +16,7 @@ import serial.tools.list_ports
 from serial import Serial, SerialException
 import pyvesc
 import argparse
-from pyvesc import SetDutyCycle, SetRPM, SetCurrent, SetCurrentBrake
+from pyvesc import SetDutyCycle, SetRPM, SetCurrent, SetCurrentBrake, SetPosition
 from gamepad_config import GamepadConfig, Colors
 import logging
 
@@ -155,6 +155,30 @@ class GamepadController:
 
         except Exception as e:
             print(f"{Colors.RED}Error sending command to VESC: {e}{Colors.RESET}")
+            
+    def send_steering_to_vesc(self, steering_value):
+        """Send steering command to the VESC for direction control"""
+        if self.serial_conn is None or not self.serial_conn.is_open:
+            return
+
+        try:
+            # Get maximum steering angle from config (default to 1.0 if not set)
+            max_steering_angle = self.config['performance'].get('max_steering_angle', 1.0)
+            
+            # Scale the steering value (-1.0 to 1.0) to the appropriate range for SetPosition
+            # Typically the middle position is 0, and max left/right are negative/positive values
+            # Multiply by 1000000 as required by VESC protocol for the SetPosition command
+            scaled_position = int(steering_value * max_steering_angle * 1000000)
+            
+            # Create the SetPosition message
+            msg = SetPosition(scaled_position)
+            
+            # Encode and send the message
+            packet = pyvesc.encode(msg)
+            self.serial_conn.write(packet)
+            
+        except Exception as e:
+            print(f"{Colors.RED}Error sending steering command to VESC: {e}{Colors.RESET}")
 
     def handle_events(self):
         """Process events and controller inputs"""
@@ -309,6 +333,7 @@ class GamepadController:
 
                 # Send commands to VESC
                 self.send_to_vesc(self.throttle)
+                self.send_steering_to_vesc(self.steering)
 
                 # Display current values (but not too frequently)
                 current_time = time.time()

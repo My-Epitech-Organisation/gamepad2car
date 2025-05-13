@@ -48,6 +48,7 @@ DEFAULT_CONFIG = {
         "max_duty_cycle": 0.3,    # Maximum duty cycle (0.0 to 1.0)
         "max_rpm": 5000,          # Maximum motor RPM
         "max_current": 10,        # Maximum motor current (Amps)
+        "max_steering_angle": 1.0, # Maximum steering angle (-1.0 to 1.0)
         "control_mode": "duty_cycle",  # Options: 'duty_cycle', 'rpm', 'current'
         "boost_multiplier": 1.5,  # Multiplier when boost button is pressed
         "cruise_increment": 0.05, # Increment for cruise control
