@@ -13,6 +13,9 @@ import pyvesc
 import argparse
 from pyvesc import SetDutyCycle, SetRPM, SetCurrent, SetCurrentBrake
 from gamepad_config import GamepadConfig, Colors
+import logging
+
+logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 
 
 class GamepadController:
@@ -39,8 +42,11 @@ class GamepadController:
             return
 
         # Initialize PyGame for controller input
+        logging.debug("About to initialize pygame modules")
         pygame.display.init()  # Pour l'affichage uniquement
+        logging.debug("Display module initialized")
         pygame.joystick.init() # Pour les manettes uniquement
+        logging.debug("Joystick module initialized")
 
         # Connect to the gamepad
         self.connect_gamepad()
