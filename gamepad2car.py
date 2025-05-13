@@ -7,7 +7,8 @@ import os
 import sys
 import time
 import pygame
-import serial
+import serial.tools.list_ports
+from serial import Serial, SerialException
 import pyvesc
 import argparse
 from pyvesc import SetDutyCycle, SetRPM, SetCurrent, SetCurrentBrake
@@ -75,10 +76,10 @@ class GamepadController:
         baud_rate = self.config['performance'].get('baud_rate', 115200)
 
         try:
-            self.serial_conn = serial.Serial(serial_port, baud_rate, timeout=0.05)
+            self.serial_conn = Serial(serial_port, baud_rate, timeout=0.05)
             print(f"{Colors.GREEN}Connected to VESC at {serial_port}{Colors.RESET}")
             return True
-        except serial.SerialException as e:
+        except SerialException as e:
             print(f"{Colors.RED}Error connecting to VESC: {e}{Colors.RESET}")
             print(f"Make sure the VESC is connected to {serial_port} and you have permission to access it.")
             print("You may need to run: sudo chmod 666 " + serial_port)
