@@ -22,6 +22,7 @@ class GamepadController:
     def __init__(self, config_only=False):
         self.running = True
         self.config_manager = GamepadConfig()
+        logging.debug("GamepadConfig initialized")
         self.joystick = None
         self.serial_conn = None
 
@@ -40,6 +41,7 @@ class GamepadController:
         if config_only:
             self.config_manager.run_calibration_menu()
             return
+        logging.debug("Calibration menu completed")
 
         # Initialize PyGame for controller input
         logging.debug("About to initialize pygame modules")
