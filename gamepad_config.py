@@ -73,8 +73,9 @@ class GamepadConfig:
         print(f"{Colors.GREEN}Gamepad configuration initialized{Colors.RESET}")
         # Initialize only the pygame modules we need, avoiding audio/D-Bus issues
         pygame.display.init()
+        print(f"{Colors.GREEN}Pygame display module initialized{Colors.RESET}")
         pygame.joystick.init()
-        print(f"{Colors.GREEN}Pygame display and joystick modules initialized{Colors.RESET}")
+        print(f"{Colors.GREEN}Pygame joystick module initialized{Colors.RESET}")
 
     def load_config(self):
         """Load configuration from file or create default config"""
