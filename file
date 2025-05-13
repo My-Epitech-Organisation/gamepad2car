@@ -1,9 +1,0 @@
-Hello from the pygame community. https://www.pygame.org/contribute.html
-No configuration file found. Using default configuration.
-dbus[7159]: arguments to dbus_message_new_method_call() were incorrect, assertion "path != NULL" failed in file ../../../dbus/dbus-message.c line 1362.
-This is normally a bug in some application using the D-Bus library.
-
-  D-Bus not built with -rdynamic so unable to print a backtrace
-./launch.sh: line 125:  7159 Aborted                 (core dumped) ./gamepad2car.py
-Exited. Virtual environment deactivated.
-epitechrobocar@epitechrobocar-desktop:~/robocar/
