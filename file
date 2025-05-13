@@ -1,10 +1,9 @@
-epitechrobocar@epitechrobocar-desktop:~/robocar/gamepad2car$ python3 ./gamepad2car.py
-pygame 2.6.1 (SDL 2.0.8, Python 3.6.9)
 Hello from the pygame community. https://www.pygame.org/contribute.html
 No configuration file found. Using default configuration.
-dbus[7027]: arguments to dbus_message_new_method_call() were incorrect, assertion "path != NULL" failed in file ../../../dbus/dbus-message.c line 1362.
+dbus[7159]: arguments to dbus_message_new_method_call() were incorrect, assertion "path != NULL" failed in file ../../../dbus/dbus-message.c line 1362.
 This is normally a bug in some application using the D-Bus library.
 
   D-Bus not built with -rdynamic so unable to print a backtrace
-Aborted (core dumped)
-
+./launch.sh: line 125:  7159 Aborted                 (core dumped) ./gamepad2car.py
+Exited. Virtual environment deactivated.
+epitechrobocar@epitechrobocar-desktop:~/robocar/
