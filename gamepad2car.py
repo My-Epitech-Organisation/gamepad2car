@@ -317,8 +317,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Control a car with a gamepad using PyVESC')
     parser.add_argument('--config', action='store_true', help='Run gamepad configuration and calibration')
     args = parser.parse_args()
-
+    logging.debug("Command line arguments parsed")
     controller = GamepadController(config_only=args.config)
-
+    logging.debug("GamepadController initialized")
     if not args.config:
         controller.run()
