@@ -1,15 +1,10 @@
-Traceback (most recent call last):
-  File "./gamepad2car.py", line 78, in connect_vesc
-    self.serial_conn = serial.Serial(serial_port, baud_rate, timeout=0.05)
-AttributeError: module 'serial' has no attribute 'Serial'
+epitechrobocar@epitechrobocar-desktop:~/robocar/gamepad2car$ python3 ./gamepad2car.py
+pygame 2.6.1 (SDL 2.0.8, Python 3.6.9)
+Hello from the pygame community. https://www.pygame.org/contribute.html
+No configuration file found. Using default configuration.
+dbus[7027]: arguments to dbus_message_new_method_call() were incorrect, assertion "path != NULL" failed in file ../../../dbus/dbus-message.c line 1362.
+This is normally a bug in some application using the D-Bus library.
 
-During handling of the above exception, another exception occurred:
+  D-Bus not built with -rdynamic so unable to print a backtrace
+Aborted (core dumped)
 
-Traceback (most recent call last):
-  File "./gamepad2car.py", line 314, in <module>
-    controller = GamepadController(config_only=args.config)
-  File "./gamepad2car.py", line 48, in __init__
-    self.connect_vesc()
-  File "./gamepad2car.py", line 81, in connect_vesc
-    except serial.SerialException as e:
-AttributeError: module 'serial' has no attribute 'SerialException'
