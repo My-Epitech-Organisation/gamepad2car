@@ -1,0 +1,15 @@
+Traceback (most recent call last):
+  File "./gamepad2car.py", line 78, in connect_vesc
+    self.serial_conn = serial.Serial(serial_port, baud_rate, timeout=0.05)
+AttributeError: module 'serial' has no attribute 'Serial'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "./gamepad2car.py", line 314, in <module>
+    controller = GamepadController(config_only=args.config)
+  File "./gamepad2car.py", line 48, in __init__
+    self.connect_vesc()
+  File "./gamepad2car.py", line 81, in connect_vesc
+    except serial.SerialException as e:
+AttributeError: module 'serial' has no attribute 'SerialException'
