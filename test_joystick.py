@@ -16,20 +16,24 @@ import time
 
 def main():
     print("Starting joystick test...")
-    
+
     # Initialize pygame without initializing display
     pygame.init()
-    
+
     # Immediately quit potentially problematic subsystems
-    pygame.mixer.quit()
-    
+    try:
+        if hasattr(pygame, 'mixer') and pygame.mixer:
+            pygame.mixer.quit()
+    except (AttributeError, ImportError):
+        print("Note: pygame.mixer not available, skipping")
+
     # Make sure joystick module is explicitly initialized
     if not pygame.joystick.get_init():
         pygame.joystick.init()
-    
+
     print(f"Joystick module initialized: {pygame.joystick.get_init()}")
     print(f"Number of joysticks: {pygame.joystick.get_count()}")
-    
+
     if pygame.joystick.get_count() > 0:
         joystick = pygame.joystick.Joystick(0)
         joystick.init()
@@ -37,7 +41,7 @@ def main():
         print(f"Number of axes: {joystick.get_numaxes()}")
         print(f"Number of buttons: {joystick.get_numbuttons()}")
         print(f"Number of hats: {joystick.get_numhats()}")
-        
+
         # Test reading some values
         print("\nMoving joystick will display axis values. Press Ctrl+C to exit.")
         try:
@@ -46,14 +50,14 @@ def main():
                 values = []
                 for i in range(joystick.get_numaxes()):
                     values.append(f"{joystick.get_axis(i):.2f}")
-                
+
                 print(f"\rAxes: {', '.join(values)}", end="")
                 time.sleep(0.1)
         except KeyboardInterrupt:
             print("\nTest terminated by user")
     else:
         print("No joystick/gamepad found.")
-    
+
     pygame.quit()
     print("Test completed")
 

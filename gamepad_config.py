@@ -80,7 +80,13 @@ class GamepadConfig:
         if not pygame.get_init():
             pygame.init()
             # Immediately quit any potentially problematic subsystems
-            pygame.mixer.quit()
+            try:
+                # Check if mixer module is available before quitting it
+                if hasattr(pygame, 'mixer') and pygame.mixer:
+                    pygame.mixer.quit()
+            except (AttributeError, ImportError):
+                # Module not available, ignore error
+                pass
             print(f"{Colors.GREEN}Pygame initialized with limited subsystems{Colors.RESET}")
         
         # Make sure joystick module is initialized

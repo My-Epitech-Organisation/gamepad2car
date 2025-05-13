@@ -50,8 +50,20 @@ class GamepadController:
 
         # Initialize PyGame for controller input
         logging.debug("About to initialize pygame modules")
-        pygame.display.init()  # Pour l'affichage uniquement
-        logging.debug("Display module initialized")
+        # Initialize only necessary subsystems
+        try:
+            pygame.display.init()  # Pour l'affichage uniquement
+            logging.debug("Display module initialized")
+        except Exception as e:
+            logging.error(f"Failed to initialize display: {e}")
+            # Try with dummy display
+            os.environ["SDL_VIDEODRIVER"] = "dummy"
+            try:
+                pygame.display.init()
+                logging.debug("Display module initialized with dummy driver")
+            except Exception as e:
+                logging.error(f"Failed even with dummy display: {e}")
+
         pygame.joystick.init() # Pour les manettes uniquement
         logging.debug("Joystick module initialized")
 
