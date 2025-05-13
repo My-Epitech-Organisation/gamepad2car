@@ -43,13 +43,11 @@ class GamepadGUI:
             pygame.joystick.init()
 
         self.gamepad_name = StringVar(value="Non connecté")
+        self.status_text = StringVar(value="Prêt")
 
         # Connect to gamepad
         self.joystick = None
         self.connect_gamepad()
-
-        # Status variables
-        self.status_text = StringVar(value="Prêt")
 
         # For gamepad detection
         self.axis_values = {}
