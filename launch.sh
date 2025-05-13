@@ -114,6 +114,10 @@ fi
 # Launch the application
 echo -e "${YELLOW}Launching Gamepad2Car application...${NC}"
 
+# Set environment variables to prevent D-Bus issues on Jetson Nano
+export SDL_AUDIODRIVER="dummy"
+export SDL_DBUS_SCREENSAVER_INHIBIT="0"
+
 if [ "$GUI_MODE" = true ]; then
     echo -e "${CYAN}Running in graphical configuration mode${NC}"
     ./gamepad_gui.py

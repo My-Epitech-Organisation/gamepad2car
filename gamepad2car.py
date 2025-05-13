@@ -6,6 +6,11 @@ gamepad2car.py - Control a car using gamepad and PyVESC with video game-like con
 import os
 import sys
 import time
+
+# Set environment variables to prevent D-Bus issues
+os.environ["SDL_AUDIODRIVER"] = "dummy"
+os.environ["SDL_DBUS_SCREENSAVER_INHIBIT"] = "0"
+
 import pygame
 import serial.tools.list_ports
 from serial import Serial, SerialException

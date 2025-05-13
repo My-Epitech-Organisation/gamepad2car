@@ -71,10 +71,10 @@ class GamepadConfig:
         self.joystick = None
 
         print(f"{Colors.GREEN}Gamepad configuration initialized{Colors.RESET}")
-        # Initialize pygame for the configuration interface
-        pygame.init()
-        print(f"{Colors.GREEN}Pygame initialized{Colors.RESET}")
+        # Initialize only the pygame modules we need, avoiding audio/D-Bus issues
+        pygame.display.init()
         pygame.joystick.init()
+        print(f"{Colors.GREEN}Pygame display and joystick modules initialized{Colors.RESET}")
 
     def load_config(self):
         """Load configuration from file or create default config"""
@@ -282,8 +282,15 @@ class GamepadConfig:
 
     def run_calibration_menu(self):
         """Run the main calibration menu"""
-        if not pygame.get_init():
-            pygame.init()
+        # Initialize only the necessary subsystems if not already done
+        if not pygame.display.get_init():
+            pygame.display.init()
+        if not pygame.joystick.get_init():
+            pygame.joystick.init()
+
+        # Add environment variables to prevent D-Bus issues
+        os.environ["SDL_AUDIODRIVER"] = "dummy"
+        os.environ["SDL_DBUS_SCREENSAVER_INHIBIT"] = "0"
 
         pygame.display.set_mode((320, 240))
         pygame.display.set_caption("Gamepad Calibration")
