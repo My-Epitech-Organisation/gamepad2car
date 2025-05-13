@@ -39,8 +39,8 @@ class GamepadController:
             return
 
         # Initialize PyGame for controller input
-        pygame.init()
-        pygame.joystick.init()
+        pygame.display.init()  # Pour l'affichage uniquement
+        pygame.joystick.init() # Pour les manettes uniquement
 
         # Connect to the gamepad
         self.connect_gamepad()
