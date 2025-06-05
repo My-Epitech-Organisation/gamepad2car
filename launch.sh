@@ -111,6 +111,37 @@ else
     echo "Make sure the gamepad is powered on and properly connected."
 fi
 
+# Patch PyVESC library for compatibility
+SETTERS_FILE="$VENV_DIR/lib64/python3.13/site-packages/pyvesc/VESC/messages/setters.py"
+if [ -f "$SETTERS_FILE" ]; then
+    echo -e "${YELLOW}Patching PyVESC library for compatibility...${NC}"
+    # Create a backup if it doesn't already exist
+    if [ ! -f "${SETTERS_FILE}.bak" ]; then
+        cp "$SETTERS_FILE" "${SETTERS_FILE}.bak"
+        echo -e "${GREEN}Created backup of original file at ${SETTERS_FILE}.bak${NC}"
+    fi
+    
+    # Patch the file using sed to replace the line
+    sed -i "s/('duty_cycle', 'i', 100000)/('duty_cycle', 'i')/g" "$SETTERS_FILE"
+    if [ $? -eq 0 ]; then
+        echo -e "${GREEN}Successfully patched PyVESC library${NC}"
+    else
+        echo -e "${RED}Failed to patch PyVESC library${NC}"
+    fi
+else
+    echo -e "${YELLOW}Could not find PyVESC setters.py file at expected location:${NC}"
+    echo -e "${YELLOW}$SETTERS_FILE${NC}"
+    echo -e "${YELLOW}Will try to continue anyway...${NC}"
+    
+    # Try to find the file in other locations
+    FOUND_FILES=$(find $VENV_DIR -name "setters.py" | grep pyvesc)
+    if [ ! -z "$FOUND_FILES" ]; then
+        echo -e "${GREEN}Found potential PyVESC files at:${NC}"
+        echo -e "$FOUND_FILES"
+        echo -e "${YELLOW}Please update the SETTERS_FILE variable in launch.sh to the correct path${NC}"
+    fi
+fi
+
 # Launch the application
 echo -e "${YELLOW}Launching Gamepad2Car application...${NC}"
 
