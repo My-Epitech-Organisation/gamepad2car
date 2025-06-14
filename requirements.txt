@@ -1,4 +1,0 @@
-pygame>=2.6.0
-pyvesc>=1.0.5
-pyserial>=3.5
-pythoncrc>=1.2
