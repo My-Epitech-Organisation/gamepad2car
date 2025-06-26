@@ -78,7 +78,7 @@ fi
 
 # Install/upgrade requirements
 echo -e "${YELLOW}Installing required packages...${NC}"
-#pip install --upgrade -r requirements.txt
+pip install --upgrade -r requirements.txt
 if [ $? -ne 0 ]; then
     echo -e "${RED}Failed to install requirements.${NC}"
     deactivate
