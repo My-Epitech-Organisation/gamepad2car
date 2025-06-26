@@ -5,7 +5,7 @@ A Python-based controller for driving an RC car or robot using a gamepad with Py
 ## Features
 
 - **Gamepad Control**: Use any gamepad (optimized for Logitech F710) to control your vehicle
-- **Video Game-Like Controls**: Includes boost, reverse gear toggle, and cruise control
+- **Video Game-Like Controls**: Includes boost, reverse gear toggle, and horn sound
 - **Gamepad Configuration**: Both terminal-based and graphical interface for calibration and remapping
 - **Customizable**: Adjust sensitivity, deadzones, and performance parameters
 - **VESC Integration**: Controls VESC-based motors via PyVESC protocol
@@ -75,7 +75,7 @@ The graphical configuration utility provides:
 | A Button             | Button 0                 | Boost (temporary speed increase)           |
 | B Button             | Button 1                 | Emergency Stop (immediate brake)           |
 | X Button             | Button 2                 | Toggle Reverse Gear                        |
-| Y Button             | Button 3                 | Horn Sound + Toggle Cruise Control         |
+| Y Button             | Button 3                 | Horn Sound                                  |
 
 ## Command Line Options
 

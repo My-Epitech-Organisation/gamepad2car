@@ -36,8 +36,6 @@ class GamepadController:
         self.throttle = 0.0
         self.steering = 0.0
         self.in_reverse_gear = False
-        self.cruise_control_active = False
-        self.cruise_control_speed = 0.0
         self.boost_active = False
 
         # Sound variables
@@ -256,26 +254,14 @@ class GamepadController:
                     self.send_emergency_brake()
                     time.sleep(0.1)
 
-                # Toggle cruise control and play horn
-                if self.config_manager.is_button_pressed("cruise_toggle"):
-                    # Play horn sound when Y button is pressed
+                # Play horn sound when Y button is pressed
+                if self.config_manager.is_button_pressed("horn"):
                     self.play_horn()
-                    
-                    if not self.cruise_control_active:
-                        # Activate cruise control at current speed
-                        self.cruise_control_active = True
-                        self.cruise_control_speed = self.throttle
-                        print(f"{Colors.YELLOW}Cruise control activated at: {self.cruise_control_speed:.2f}{Colors.RESET}")
-                    else:
-                        # Deactivate cruise control
-                        self.cruise_control_active = False
-                        print(f"{Colors.YELLOW}Cruise control deactivated{Colors.RESET}")
 
     def send_emergency_brake(self):
         """Apply emergency brake"""
         print(f"{Colors.RED}EMERGENCY STOP!{Colors.RESET}")
         self.throttle = 0.0
-        self.cruise_control_active = False
 
         # Apply brake and then zero throttle
         if self.serial_conn and self.serial_conn.is_open:
@@ -311,44 +297,15 @@ class GamepadController:
             # Check boost button
             self.boost_active = self.config_manager.is_button_pressed("boost")
 
-            # Handle cruise control
-            if self.cruise_control_active:
-                # Use the current cruise control speed
-                self.throttle = self.cruise_control_speed
+            # Normal throttle control with trigger-based input
+            throttle_input = self.config_manager.get_control_value("throttle")
+            brake_input = self.config_manager.get_control_value("brake")
 
-                # Allow fine adjustment with throttle controls
-                throttle_input = self.config_manager.get_control_value("throttle")
-                brake_input = self.config_manager.get_control_value("brake")
-                net_throttle = throttle_input - brake_input
+            # Calculate net throttle: throttle - brake (racing-style controls)
+            self.throttle = throttle_input - brake_input
 
-                if abs(net_throttle) > 0.3:  # Significant throttle/brake input
-                    # Adjust cruise control speed
-                    increment = self.config['performance']['cruise_increment']
-                    if net_throttle > 0:
-                        self.cruise_control_speed += increment
-                    else:
-                        self.cruise_control_speed -= increment
-
-                    # Clamp to reasonable range
-                    self.cruise_control_speed = max(0.0, min(1.0, self.cruise_control_speed))
-                    self.throttle = self.cruise_control_speed
-                    print(f"{Colors.YELLOW}Cruise speed adjusted to: {self.cruise_control_speed:.2f}{Colors.RESET}")
-
-                # Brake pedal cancels cruise control
-                if brake_input > 0.2:
-                    self.cruise_control_active = False
-                    self.throttle = 0.0
-                    print(f"{Colors.YELLOW}Cruise control deactivated by brake{Colors.RESET}")
-            else:
-                # Normal throttle control with trigger-based input
-                throttle_input = self.config_manager.get_control_value("throttle")
-                brake_input = self.config_manager.get_control_value("brake")
-
-                # Calculate net throttle: throttle - brake (racing-style controls)
-                self.throttle = throttle_input - brake_input
-
-                # Clamp the result to valid range
-                self.throttle = max(-1.0, min(1.0, self.throttle))
+            # Clamp the result to valid range
+            self.throttle = max(-1.0, min(1.0, self.throttle))
 
             # Steering control
             self.steering = self.config_manager.get_control_value("steering")
@@ -374,9 +331,6 @@ class GamepadController:
         if self.boost_active:
             status.append(f"{Colors.YELLOW}BOOST{Colors.RESET}")
 
-        if self.cruise_control_active:
-            status.append(f"{Colors.GREEN}CRUISE:{self.cruise_control_speed:.2f}{Colors.RESET}")
-
         print(f"\r{' | '.join(status)}", end="")
 
     def run(self):
@@ -391,7 +345,7 @@ class GamepadController:
         print("  A Button: Boost (temporary speed increase)")
         print("  X Button: Toggle reverse gear")
         print("  B Button: Emergency stop")
-        print("  Y Button: Horn sound + Toggle cruise control")
+        print("  Y Button: Horn sound")
         print("  Ctrl+C: Quit")
 
         # Afficher les informations du servomoteur si activé

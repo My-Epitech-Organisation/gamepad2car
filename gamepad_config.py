@@ -30,7 +30,7 @@ DEFAULT_CONFIG = {
         "emergency_stop_btn": 1,  # B button (F710)
         "boost_btn": 0,           # A button (F710)
         "reverse_btn": 2,         # X button (F710)
-        "cruise_toggle_btn": 3,   # Y button (F710)
+        "horn_btn": 3,   # Y button (F710)
     },
     # Calibration settings
     "calibration": {

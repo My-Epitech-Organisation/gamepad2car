@@ -216,7 +216,7 @@ N'oubliez pas d'enregistrer votre configuration avant de quitter!
         self.mapping_vars["emergency_stop_btn"] = IntVar(value=self.config["controls"]["emergency_stop_btn"])
         self.mapping_vars["boost_btn"] = IntVar(value=self.config["controls"]["boost_btn"])
         self.mapping_vars["reverse_btn"] = IntVar(value=self.config["controls"]["reverse_btn"])
-        self.mapping_vars["cruise_toggle_btn"] = IntVar(value=self.config["controls"]["cruise_toggle_btn"])
+        self.mapping_vars["horn_btn"] = IntVar(value=self.config["controls"]["horn_btn"])
 
         # Emergency stop button
         ttk.Label(controls_frame, text="Arrêt d'urgence:").grid(row=5, column=0, sticky=tk.W, padx=10, pady=2)
@@ -233,10 +233,10 @@ N'oubliez pas d'enregistrer votre configuration avant de quitter!
         ttk.Label(controls_frame, textvariable=self.mapping_vars["reverse_btn"]).grid(row=7, column=1, padx=10, pady=2)
         ttk.Button(controls_frame, text="Assigner", command=lambda: self.start_listening("reverse_btn")).grid(row=7, column=2, padx=10, pady=2)
 
-        # Cruise control button
-        ttk.Label(controls_frame, text="Régulateur de vitesse:").grid(row=8, column=0, sticky=tk.W, padx=10, pady=2)
-        ttk.Label(controls_frame, textvariable=self.mapping_vars["cruise_toggle_btn"]).grid(row=8, column=1, padx=10, pady=2)
-        ttk.Button(controls_frame, text="Assigner", command=lambda: self.start_listening("cruise_toggle_btn")).grid(row=8, column=2, padx=10, pady=2)
+        # Horn button
+        ttk.Label(controls_frame, text="Klaxon:").grid(row=8, column=0, sticky=tk.W, padx=10, pady=2)
+        ttk.Label(controls_frame, textvariable=self.mapping_vars["horn_btn"]).grid(row=8, column=1, padx=10, pady=2)
+        ttk.Button(controls_frame, text="Assigner", command=lambda: self.start_listening("horn_btn")).grid(row=8, column=2, padx=10, pady=2)
 
         # Status label for mapping feedback
         self.mapping_status = StringVar(value="Cliquez sur 'Assigner' puis actionnez le contrôle souhaité")
@@ -367,7 +367,6 @@ N'oubliez pas d'enregistrer votre configuration avant de quitter!
         self.performance_vars["max_current"] = DoubleVar(value=self.config["performance"]["max_current"])
         self.performance_vars["control_mode"] = StringVar(value=self.config["performance"]["control_mode"])
         self.performance_vars["boost_multiplier"] = DoubleVar(value=self.config["performance"]["boost_multiplier"])
-        self.performance_vars["cruise_increment"] = DoubleVar(value=self.config["performance"]["cruise_increment"])
         self.performance_vars["serial_port"] = StringVar(value=self.config["performance"].get("serial_port", "/dev/ttyACM0"))
         self.performance_vars["baud_rate"] = IntVar(value=self.config["performance"].get("baud_rate", 115200))
 
@@ -401,26 +400,20 @@ N'oubliez pas d'enregistrer votre configuration avant de quitter!
                  orient=tk.HORIZONTAL, length=200).grid(row=4, column=1, padx=10, pady=2)
         ttk.Label(performance_frame, textvariable=self.performance_vars["boost_multiplier"]).grid(row=4, column=2, padx=10, pady=2)
 
-        # Cruise Control Increment
-        ttk.Label(performance_frame, text="Incrément Régulateur:").grid(row=5, column=0, sticky=tk.W, padx=10, pady=2)
-        ttk.Scale(performance_frame, from_=0.01, to=0.2, variable=self.performance_vars["cruise_increment"],
-                 orient=tk.HORIZONTAL, length=200).grid(row=5, column=1, padx=10, pady=2)
-        ttk.Label(performance_frame, textvariable=self.performance_vars["cruise_increment"]).grid(row=5, column=2, padx=10, pady=2)
-
         # Serial Connection Settings
         ttk.Label(performance_frame, text="Paramètres de connexion", style="Header.TLabel").grid(
-            row=6, column=0, sticky=tk.W, padx=10, pady=10)
+            row=5, column=0, sticky=tk.W, padx=10, pady=10)
 
         # Serial Port
-        ttk.Label(performance_frame, text="Port Série:").grid(row=7, column=0, sticky=tk.W, padx=10, pady=2)
+        ttk.Label(performance_frame, text="Port Série:").grid(row=6, column=0, sticky=tk.W, padx=10, pady=2)
         ttk.Entry(performance_frame, textvariable=self.performance_vars["serial_port"]).grid(
-            row=7, column=1, sticky=tk.W, padx=10, pady=2)
+            row=6, column=1, sticky=tk.W, padx=10, pady=2)
 
         # Baud Rate
-        ttk.Label(performance_frame, text="Vitesse (Baud):").grid(row=8, column=0, sticky=tk.W, padx=10, pady=2)
+        ttk.Label(performance_frame, text="Vitesse (Baud):").grid(row=7, column=0, sticky=tk.W, padx=10, pady=2)
         ttk.Combobox(performance_frame, textvariable=self.performance_vars["baud_rate"],
                     values=["9600", "19200", "38400", "57600", "115200", "230400"]).grid(
-            row=8, column=1, sticky=tk.W, padx=10, pady=2)
+            row=7, column=1, sticky=tk.W, padx=10, pady=2)
 
     def create_test_tab(self):
         """Create the test tab to verify configuration"""
@@ -487,12 +480,12 @@ N'oubliez pas d'enregistrer votre configuration avant de quitter!
         self.button_states_display["reverse"] = StringVar(value="Off")
         ttk.Label(reverse_frame, textvariable=self.button_states_display["reverse"]).pack(side=tk.LEFT)
 
-        # Cruise Control
-        cruise_frame = ttk.Frame(buttons_frame)
-        cruise_frame.pack(fill=tk.X, pady=5)
-        ttk.Label(cruise_frame, text="Régulateur de vitesse:").pack(side=tk.LEFT, padx=10)
-        self.button_states_display["cruise"] = StringVar(value="Off")
-        ttk.Label(cruise_frame, textvariable=self.button_states_display["cruise"]).pack(side=tk.LEFT)
+        # Horn
+        horn_frame = ttk.Frame(buttons_frame)
+        horn_frame.pack(fill=tk.X, pady=5)
+        ttk.Label(horn_frame, text="Klaxon:").pack(side=tk.LEFT, padx=10)
+        self.button_states_display["horn"] = StringVar(value="Off")
+        ttk.Label(horn_frame, textvariable=self.button_states_display["horn"]).pack(side=tk.LEFT)
 
         # Output Display
         output_frame = ttk.LabelFrame(test_frame, text="Sortie VESC")
@@ -633,7 +626,7 @@ N'oubliez pas d'enregistrer votre configuration avant de quitter!
         self.button_states_display["emergency"].set("ON" if self.config_manager.is_button_pressed("emergency_stop") else "Off")
         self.button_states_display["boost"].set("ON" if self.config_manager.is_button_pressed("boost") else "Off")
         self.button_states_display["reverse"].set("ON" if self.config_manager.is_button_pressed("reverse") else "Off")
-        self.button_states_display["cruise"].set("ON" if self.config_manager.is_button_pressed("cruise_toggle") else "Off")
+        self.button_states_display["horn"].set("ON" if self.config_manager.is_button_pressed("horn") else "Off")
 
         # Simulate VESC output
         if throttle != 0 or steering != 0:
@@ -776,7 +769,7 @@ N'oubliez pas d'enregistrer votre configuration avant de quitter!
         info += f"Arrêt d'urgence: Bouton {self.config['controls']['emergency_stop_btn']}\n"
         info += f"Boost: Bouton {self.config['controls']['boost_btn']}\n"
         info += f"Marche arrière: Bouton {self.config['controls']['reverse_btn']}\n"
-        info += f"Régulateur de vitesse: Bouton {self.config['controls']['cruise_toggle_btn']}\n"
+        info += f"Klaxon: Bouton {self.config['controls']['horn_btn']}\n"
 
         # Update text widget
         self.gamepad_info_text.config(state=tk.NORMAL)
