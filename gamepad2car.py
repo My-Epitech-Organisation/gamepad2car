@@ -111,9 +111,21 @@ class GamepadController:
     def init_sound(self):
         """Initialize sound system and locate horn sound file"""
         try:
-            # Initialize pygame mixer for sound
-            pygame.mixer.init()
-            print(f"{Colors.GREEN}Sound system initialized{Colors.RESET}")
+            # Set audio device to USB PnP Audio Device (device 0)
+            os.environ['SDL_AUDIODRIVER'] = 'pulse'  # Use PulseAudio driver
+            
+            # Initialize pygame mixer with specific USB device
+            try:
+                # Initialize with specific audio device (USB device 0)
+                pygame.mixer.pre_init(frequency=22050, size=-16, channels=2, buffer=1024, devicename='0')
+                pygame.mixer.init()
+                print(f"{Colors.GREEN}Sound system initialized with USB audio device{Colors.RESET}")
+            except Exception as e:
+                print(f"{Colors.YELLOW}Failed to initialize with USB device: {e}{Colors.RESET}")
+                print(f"{Colors.YELLOW}Trying with default audio device...{Colors.RESET}")
+                # Fallback to default device
+                pygame.mixer.init()
+                print(f"{Colors.GREEN}Sound system initialized with default device{Colors.RESET}")
             
             # Check for horn sound file in assets directory
             possible_paths = [

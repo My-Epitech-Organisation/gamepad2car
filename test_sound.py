@@ -10,13 +10,24 @@ def test_sound():
     """Test the sound system"""
     print("Testing sound system...")
     
-    # Initialize pygame mixer
+    # Set audio device to USB PnP Audio Device (device 0)
+    os.environ['SDL_AUDIODRIVER'] = 'pulse'  # Use PulseAudio driver
+    
+    # Initialize pygame mixer with specific device
     try:
+        # Initialize with specific audio device (USB device 0)
+        pygame.mixer.pre_init(frequency=22050, size=-16, channels=2, buffer=1024, devicename='0')
         pygame.mixer.init()
-        print("✓ Pygame mixer initialized successfully")
+        print("✓ Pygame mixer initialized successfully with USB audio device")
     except Exception as e:
-        print(f"✗ Failed to initialize pygame mixer: {e}")
-        return False
+        print(f"✗ Failed to initialize pygame mixer with USB device: {e}")
+        print("Trying with default settings...")
+        try:
+            pygame.mixer.init()
+            print("✓ Pygame mixer initialized with default device")
+        except Exception as e2:
+            print(f"✗ Failed to initialize pygame mixer: {e2}")
+            return False
     
     # Check for sound file
     sound_paths = [
