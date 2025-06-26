@@ -111,21 +111,40 @@ class GamepadController:
     def init_sound(self):
         """Initialize sound system and locate horn sound file"""
         try:
-            # Set audio device to USB PnP Audio Device (device 0)
-            os.environ['SDL_AUDIODRIVER'] = 'pulse'  # Use PulseAudio driver
+            # Set audio device to USB PnP Audio Device (card 2, device 0)
+            os.environ['SDL_AUDIODRIVER'] = 'alsa'  # Use ALSA driver for better device control
             
-            # Initialize pygame mixer with specific USB device
-            try:
-                # Initialize with specific audio device (USB device 0)
-                pygame.mixer.pre_init(frequency=22050, size=-16, channels=2, buffer=1024, devicename='0')
-                pygame.mixer.init()
-                print(f"{Colors.GREEN}Sound system initialized with USB audio device{Colors.RESET}")
-            except Exception as e:
-                print(f"{Colors.YELLOW}Failed to initialize with USB device: {e}{Colors.RESET}")
-                print(f"{Colors.YELLOW}Trying with default audio device...{Colors.RESET}")
-                # Fallback to default device
-                pygame.mixer.init()
-                print(f"{Colors.GREEN}Sound system initialized with default device{Colors.RESET}")
+            # Try different methods to force USB audio device
+            usb_audio_attempts = [
+                {'devicename': 'hw:2,0'},  # Direct ALSA device specification (card 2, device 0)
+                {'devicename': 'plughw:2,0'},  # ALSA with plugin layer
+                {'devicename': 'USB Audio'},  # By name
+                {'devicename': 'USB PnP Audio Device'},  # Full name
+            ]
+            
+            mixer_initialized = False
+            for i, attempt in enumerate(usb_audio_attempts):
+                try:
+                    print(f"{Colors.YELLOW}Attempting to initialize with device: {attempt['devicename']}{Colors.RESET}")
+                    pygame.mixer.quit()  # Clean previous attempt
+                    pygame.mixer.pre_init(frequency=44100, size=-16, channels=2, buffer=1024, **attempt)
+                    pygame.mixer.init()
+                    print(f"{Colors.GREEN}Sound system initialized with USB audio device: {attempt['devicename']}{Colors.RESET}")
+                    mixer_initialized = True
+                    break
+                except Exception as e:
+                    print(f"{Colors.YELLOW}Attempt {i+1} failed: {e}{Colors.RESET}")
+            
+            if not mixer_initialized:
+                print(f"{Colors.YELLOW}All USB audio attempts failed. Trying with default device...{Colors.RESET}")
+                try:
+                    pygame.mixer.quit()
+                    pygame.mixer.init()
+                    print(f"{Colors.GREEN}Sound system initialized with default device{Colors.RESET}")
+                except Exception as e:
+                    print(f"{Colors.RED}Error initializing sound system: {e}{Colors.RESET}")
+                    self.horn_available = False
+                    return
             
             # Check for horn sound file in assets directory
             possible_paths = [
