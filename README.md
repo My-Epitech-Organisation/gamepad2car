@@ -69,13 +69,13 @@ The graphical configuration utility provides:
 
 | Control              | Default Button/Axis      | Function                                   |
 |----------------------|--------------------------|-------------------------------------------|
-| Right Stick Up/Down  | Axis 3 (Vertical)        | Throttle (forward/backward)                |
+| Right Trigger (RT)   | Axis 4                   | Throttle (forward acceleration)           |
+| Left Trigger (LT)    | Axis 2                   | Brake (reverse/deceleration)               |
 | Left Stick Left/Right| Axis 0 (Horizontal)      | Steering                                   |
 | A Button             | Button 0                 | Boost (temporary speed increase)           |
 | B Button             | Button 1                 | Emergency Stop (immediate brake)           |
 | X Button             | Button 2                 | Toggle Reverse Gear                        |
 | Y Button             | Button 3                 | Toggle Cruise Control                      |
-| Left Trigger         | Axis 2                   | Brake                                      |
 
 ## Command Line Options
 

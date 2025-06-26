@@ -272,11 +272,14 @@ class GamepadController:
                 self.throttle = self.cruise_control_speed
 
                 # Allow fine adjustment with throttle controls
-                throttle_value = self.config_manager.get_control_value("throttle")
-                if abs(throttle_value) > 0.5:  # Significant throttle input
+                throttle_input = self.config_manager.get_control_value("throttle")
+                brake_input = self.config_manager.get_control_value("brake")
+                net_throttle = throttle_input - brake_input
+
+                if abs(net_throttle) > 0.3:  # Significant throttle/brake input
                     # Adjust cruise control speed
                     increment = self.config['performance']['cruise_increment']
-                    if throttle_value > 0:
+                    if net_throttle > 0:
                         self.cruise_control_speed += increment
                     else:
                         self.cruise_control_speed -= increment
@@ -286,14 +289,21 @@ class GamepadController:
                     self.throttle = self.cruise_control_speed
                     print(f"{Colors.YELLOW}Cruise speed adjusted to: {self.cruise_control_speed:.2f}{Colors.RESET}")
 
-                # Brake pedal or brake button cancels cruise control
-                if self.config_manager.get_control_value("brake") > 0.2:
+                # Brake pedal cancels cruise control
+                if brake_input > 0.2:
                     self.cruise_control_active = False
                     self.throttle = 0.0
                     print(f"{Colors.YELLOW}Cruise control deactivated by brake{Colors.RESET}")
             else:
-                # Normal throttle control
-                self.throttle = self.config_manager.get_control_value("throttle")
+                # Normal throttle control with trigger-based input
+                throttle_input = self.config_manager.get_control_value("throttle")
+                brake_input = self.config_manager.get_control_value("brake")
+
+                # Calculate net throttle: throttle - brake (racing-style controls)
+                self.throttle = throttle_input - brake_input
+
+                # Clamp the result to valid range
+                self.throttle = max(-1.0, min(1.0, self.throttle))
 
             # Steering control
             self.steering = self.config_manager.get_control_value("steering")
@@ -303,8 +313,14 @@ class GamepadController:
 
     def display_controls(self):
         """Display current control state"""
+        # Get individual input values for display
+        throttle_input = self.config_manager.get_control_value("throttle")
+        brake_input = self.config_manager.get_control_value("brake")
+
         status = []
-        status.append(f"Throttle: {self.throttle:+.2f}")
+        status.append(f"RT: {throttle_input:.2f}")
+        status.append(f"LT: {brake_input:.2f}")
+        status.append(f"Net: {self.throttle:+.2f}")
         status.append(f"Steering: {self.steering:+.2f}")
 
         if self.in_reverse_gear:
@@ -324,8 +340,9 @@ class GamepadController:
         print("-" * 50)
         print(f"Control mode: {self.config['performance']['control_mode']}")
         print(f"{Colors.YELLOW}Controls:{Colors.RESET}")
-        print("  Throttle/Brake: Mapped in configuration")
-        print("  Steering: Mapped in configuration (contrôle du servomoteur sur pin PB5)")
+        print("  RT (Right Trigger): Throttle/Acceleration")
+        print("  LT (Left Trigger): Brake/Deceleration") 
+        print("  Left Stick: Steering (contrôle du servomoteur sur pin PB5)")
         print("  A Button: Boost (temporary speed increase)")
         print("  X Button: Toggle reverse gear")
         print("  B Button: Emergency stop")

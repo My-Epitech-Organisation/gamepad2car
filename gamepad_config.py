@@ -24,8 +24,8 @@ import sys
 DEFAULT_CONFIG = {
     # Control mappings
     "controls": {
-        "throttle_axis": 3,       # Right stick vertical (F710)
-        "brake_axis": 2,          # Left trigger (F710)
+        "throttle_axis": 4,       # Right trigger (RT) (F710)
+        "brake_axis": 2,          # Left trigger (LT) (F710)
         "steering_axis": 0,       # Left stick horizontal (F710)
         "emergency_stop_btn": 1,  # B button (F710)
         "boost_btn": 0,           # A button (F710)
@@ -35,12 +35,13 @@ DEFAULT_CONFIG = {
     # Calibration settings
     "calibration": {
         "throttle_deadzone": 0.05,
+        "brake_deadzone": 0.05,
         "steering_deadzone": 0.05,
         "throttle_min": -1.0,
         "throttle_max": 1.0,
         "steering_min": -1.0,
         "steering_max": 1.0,
-        "invert_throttle": True,   # Invert throttle so pushing up is positive
+        "invert_throttle": False,   # For triggers, don't invert by default
         "invert_steering": False,
     },
     # Performance settings
@@ -210,6 +211,10 @@ class GamepadConfig:
             self.config["calibration"]["throttle_min"] = min_value
             self.config["calibration"]["throttle_max"] = max_value
             self.config["calibration"]["invert_throttle"] = invert
+        elif axis_name == "brake":
+            self.config["calibration"]["brake_min"] = min_value
+            self.config["calibration"]["brake_max"] = max_value
+            self.config["calibration"]["invert_brake"] = invert
         elif axis_name == "steering":
             self.config["calibration"]["steering_min"] = min_value
             self.config["calibration"]["steering_max"] = max_value
@@ -420,20 +425,23 @@ class GamepadConfig:
 
             print(f"\n{Colors.CYAN}{Colors.BOLD}=== Gamepad Calibration and Configuration ==={Colors.RESET}")
             print(f"{Colors.YELLOW}1. Calibrate Throttle{Colors.RESET}")
-            print(f"{Colors.YELLOW}2. Calibrate Steering{Colors.RESET}")
-            print(f"{Colors.YELLOW}3. Map Throttle Axis{Colors.RESET}")
-            print(f"{Colors.YELLOW}4. Map Steering Axis{Colors.RESET}")
-            print(f"{Colors.YELLOW}5. Map Emergency Stop Button{Colors.RESET}")
-            print(f"{Colors.YELLOW}6. Map Boost Button{Colors.RESET}")
-            print(f"{Colors.YELLOW}7. Map Reverse Button{Colors.RESET}")
-            print(f"{Colors.YELLOW}8. Set Throttle Deadzone{Colors.RESET}")
-            print(f"{Colors.YELLOW}9. Set Steering Deadzone{Colors.RESET}")
-            print(f"{Colors.YELLOW}10. Set Max Duty Cycle{Colors.RESET}")
-            print(f"{Colors.YELLOW}11. Set Control Mode{Colors.RESET}")
-            print(f"{Colors.YELLOW}12. Test Current Configuration{Colors.RESET}")
-            print(f"{Colors.YELLOW}13. Save Configuration{Colors.RESET}")
-            print(f"{Colors.YELLOW}14. Reset to Default Configuration{Colors.RESET}")
-            print(f"{Colors.YELLOW}15. Configure Servo Settings{Colors.RESET}")
+            print(f"{Colors.YELLOW}2. Calibrate Brake{Colors.RESET}")
+            print(f"{Colors.YELLOW}3. Calibrate Steering{Colors.RESET}")
+            print(f"{Colors.YELLOW}4. Map Throttle Axis{Colors.RESET}")
+            print(f"{Colors.YELLOW}5. Map Brake Axis{Colors.RESET}")
+            print(f"{Colors.YELLOW}6. Map Steering Axis{Colors.RESET}")
+            print(f"{Colors.YELLOW}7. Map Emergency Stop Button{Colors.RESET}")
+            print(f"{Colors.YELLOW}8. Map Boost Button{Colors.RESET}")
+            print(f"{Colors.YELLOW}9. Map Reverse Button{Colors.RESET}")
+            print(f"{Colors.YELLOW}10. Set Throttle Deadzone{Colors.RESET}")
+            print(f"{Colors.YELLOW}11. Set Brake Deadzone{Colors.RESET}")
+            print(f"{Colors.YELLOW}12. Set Steering Deadzone{Colors.RESET}")
+            print(f"{Colors.YELLOW}13. Set Max Duty Cycle{Colors.RESET}")
+            print(f"{Colors.YELLOW}14. Set Control Mode{Colors.RESET}")
+            print(f"{Colors.YELLOW}15. Test Current Configuration{Colors.RESET}")
+            print(f"{Colors.YELLOW}16. Save Configuration{Colors.RESET}")
+            print(f"{Colors.YELLOW}17. Reset to Default Configuration{Colors.RESET}")
+            print(f"{Colors.YELLOW}18. Configure Servo Settings{Colors.RESET}")
             print(f"{Colors.YELLOW}0. Exit{Colors.RESET}")
 
             choice = input("\nEnter your choice: ").strip()
@@ -441,33 +449,39 @@ class GamepadConfig:
             if choice == "1":
                 self.calibrate_axis("throttle", self.config["controls"]["throttle_axis"])
             elif choice == "2":
-                self.calibrate_axis("steering", self.config["controls"]["steering_axis"])
+                self.calibrate_axis("brake", self.config["controls"]["brake_axis"])
             elif choice == "3":
-                self.map_control("throttle", "axis")
+                self.calibrate_axis("steering", self.config["controls"]["steering_axis"])
             elif choice == "4":
-                self.map_control("steering", "axis")
+                self.map_control("throttle", "axis")
             elif choice == "5":
-                self.map_control("emergency_stop", "button")
+                self.map_control("brake", "axis")
             elif choice == "6":
-                self.map_control("boost", "button")
+                self.map_control("steering", "axis")
             elif choice == "7":
-                self.map_control("reverse", "button")
+                self.map_control("emergency_stop", "button")
             elif choice == "8":
-                self.set_deadzone("throttle")
+                self.map_control("boost", "button")
             elif choice == "9":
-                self.set_deadzone("steering")
+                self.map_control("reverse", "button")
             elif choice == "10":
-                self.set_performance("max_duty_cycle")
+                self.set_deadzone("throttle")
             elif choice == "11":
-                self.set_performance("control_mode")
+                self.set_deadzone("brake")
             elif choice == "12":
-                self.test_configuration()
+                self.set_deadzone("steering")
             elif choice == "13":
-                self.save_config()
+                self.set_performance("max_duty_cycle")
             elif choice == "14":
+                self.set_performance("control_mode")
+            elif choice == "15":
+                self.test_configuration()
+            elif choice == "16":
+                self.save_config()
+            elif choice == "17":
                 self.config = DEFAULT_CONFIG.copy()
                 print(f"{Colors.YELLOW}Configuration reset to defaults{Colors.RESET}")
-            elif choice == "15":
+            elif choice == "18":
                 self.configure_servo_settings()
             elif choice == "0":
                 running = False
@@ -492,6 +506,7 @@ class GamepadConfig:
 
         # Get control mappings
         throttle_axis = self.config["controls"]["throttle_axis"]
+        brake_axis = self.config["controls"]["brake_axis"]
         steering_axis = self.config["controls"]["steering_axis"]
         emergency_btn = self.config["controls"]["emergency_stop_btn"]
         boost_btn = self.config["controls"]["boost_btn"]
@@ -499,6 +514,7 @@ class GamepadConfig:
 
         # Calibration settings
         throttle_dz = self.config["calibration"]["throttle_deadzone"]
+        brake_dz = self.config["calibration"].get("brake_deadzone", 0.05)
         steering_dz = self.config["calibration"]["steering_deadzone"]
         invert_throttle = self.config["calibration"]["invert_throttle"]
         invert_steering = self.config["calibration"]["invert_steering"]
@@ -521,24 +537,41 @@ class GamepadConfig:
 
             # Get raw values
             raw_throttle = self.joystick.get_axis(throttle_axis)
+            raw_brake = self.joystick.get_axis(brake_axis)
             raw_steering = self.joystick.get_axis(steering_axis)
 
-            # Apply inversion if configured
+            # Process throttle (trigger conversion)
+            if throttle_axis in [2, 4, 5]:  # Common trigger axes
+                raw_throttle = (raw_throttle + 1.0) / 2.0
             if invert_throttle:
                 raw_throttle = -raw_throttle
+
+            # Process brake (trigger conversion)
+            if brake_axis in [2, 4, 5]:  # Common trigger axes
+                raw_brake = (raw_brake + 1.0) / 2.0
+
+            # Process steering
             if invert_steering:
                 raw_steering = -raw_steering
 
-            # Apply deadzone
+            # Apply deadzones
             if abs(raw_throttle) < throttle_dz:
                 throttle = 0.0
             else:
                 throttle = raw_throttle
 
+            if abs(raw_brake) < brake_dz:
+                brake = 0.0
+            else:
+                brake = raw_brake
+
             if abs(raw_steering) < steering_dz:
                 steering = 0.0
             else:
                 steering = raw_steering
+
+            # Calculate net throttle (throttle - brake)
+            net_throttle = throttle - brake
 
             # Calculate servo position if servo is enabled
             servo_pos = "N/A"
@@ -563,7 +596,7 @@ class GamepadConfig:
             reverse = self.joystick.get_button(reverse_btn)
 
             # Clear the line and print the current values
-            print(f"\rThrottle: {throttle:+.2f} | Steering: {steering:+.2f} | Servo: {servo_pos} | E-Stop: {'ON' if e_stop else 'off'} | Boost: {'ON' if boost else 'off'} | Reverse: {'ON' if reverse else 'off'}", end="")
+            print(f"\rThrottle: {throttle:+.2f} | Brake: {brake:+.2f} | Net: {net_throttle:+.2f} | Steering: {steering:+.2f} | Servo: {servo_pos} | E-Stop: {'ON' if e_stop else 'off'} | Boost: {'ON' if boost else 'off'} | Reverse: {'ON' if reverse else 'off'}", end="")
 
             clock.tick(30)  # 30 FPS
 
@@ -579,9 +612,30 @@ class GamepadConfig:
             deadzone = self.config["calibration"]["throttle_deadzone"]
             raw_value = self.joystick.get_axis(axis)
 
+            # For triggers, convert from (-1 to 1) to (0 to 1) range
+            # Triggers typically rest at -1 and go to +1 when pressed
+            if axis in [2, 4, 5]:  # Common trigger axes
+                raw_value = (raw_value + 1.0) / 2.0
+
             # Apply inversion if configured
             if self.config["calibration"]["invert_throttle"]:
                 raw_value = -raw_value
+
+            # Apply deadzone
+            if abs(raw_value) < deadzone:
+                return 0.0
+
+            return raw_value
+
+        elif control_name == "brake":
+            axis = self.config["controls"]["brake_axis"]
+            deadzone = self.config["calibration"].get("brake_deadzone", 0.05)
+            raw_value = self.joystick.get_axis(axis)
+
+            # For triggers, convert from (-1 to 1) to (0 to 1) range
+            # Triggers typically rest at -1 and go to +1 when pressed
+            if axis in [2, 4, 5]:  # Common trigger axes
+                raw_value = (raw_value + 1.0) / 2.0
 
             # Apply deadzone
             if abs(raw_value) < deadzone:
