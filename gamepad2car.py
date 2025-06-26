@@ -12,7 +12,13 @@ import time
 os.environ["SDL_DBUS_SCREENSAVER_INHIBIT"] = "0"
 
 import pygame
-from play import play
+try:
+    from playsound import playsound
+    PLAYSOUND_AVAILABLE = True
+except ImportError:
+    PLAYSOUND_AVAILABLE = False
+    print("Warning: playsound not available, using pygame mixer only for sound")
+    
 import serial.tools.list_ports
 from serial import Serial, SerialException
 import pyvesc
@@ -103,39 +109,61 @@ class GamepadController:
         return True
 
     def init_sound(self):
-        """Initialize sound and verify horn sound file exists"""
+        """Initialize sound system and locate horn sound file"""
         try:
-            # Check if the circus horn sound file exists
-            self.horn_path = os.path.join(os.path.dirname(__file__), "assets", "circus_horn.mp3")
-            if os.path.exists(self.horn_path):
-                print(f"{Colors.GREEN}Horn sound file found: {self.horn_path}{Colors.RESET}")
-                logging.debug(f"Horn sound file found at {self.horn_path}")
-                self.horn_available = True
-            else:
-                print(f"{Colors.YELLOW}Warning: Horn sound file not found at {self.horn_path}{Colors.RESET}")
-                logging.warning(f"Horn sound file not found at {self.horn_path}")
-                self.horn_available = False
+            # Initialize pygame mixer for sound
+            pygame.mixer.init()
+            print(f"{Colors.GREEN}Sound system initialized{Colors.RESET}")
+            
+            # Check for horn sound file in assets directory
+            possible_paths = [
+                "assets/circus_horn.mp3",
+                "./assets/circus_horn.mp3", 
+                os.path.join(os.path.dirname(__file__), "assets", "circus_horn.mp3")
+            ]
+            
+            for path in possible_paths:
+                if os.path.exists(path):
+                    self.horn_path = path
+                    self.horn_available = True
+                    print(f"{Colors.GREEN}Horn sound found: {path}{Colors.RESET}")
+                    break
+            
+            if not self.horn_available:
+                print(f"{Colors.YELLOW}No horn sound file found. Horn function will be disabled.{Colors.RESET}")
+                print(f"Place a sound file (MP3/WAV) at: assets/circus_horn.mp3")
                 
         except Exception as e:
-            print(f"{Colors.RED}Error initializing sound: {e}{Colors.RESET}")
-            logging.error(f"Error initializing sound: {e}")
+            print(f"{Colors.RED}Error initializing sound system: {e}{Colors.RESET}")
             self.horn_available = False
 
     def play_horn(self):
-        """Play the horn sound effect"""
-        if self.horn_available:
-            try:
-                play(self.horn_path)
-                print(f"{Colors.CYAN}🔊 BEEP BEEP! 🔊{Colors.RESET}")
-                logging.debug("Horn sound played")
-            except Exception as e:
-                print(f"{Colors.RED}Error playing horn sound: {e}{Colors.RESET}")
-                logging.error(f"Error playing horn sound: {e}")
-        else:
+        """Play horn sound effect"""
+        if not self.horn_available or not self.horn_path:
             print(f"{Colors.YELLOW}Horn sound not available{Colors.RESET}")
+            return
+            
+        try:
+            # Using pygame mixer for sound playback
+            pygame.mixer.music.load(self.horn_path)
+            pygame.mixer.music.play()
+            print(f"{Colors.CYAN}🎵 BEEP BEEP! 🎵{Colors.RESET}")
+            
+        except Exception as e:
+            print(f"{Colors.RED}Error playing horn sound with pygame: {e}{Colors.RESET}")
+            # Fallback to playsound library if pygame fails
+            if PLAYSOUND_AVAILABLE:
+                try:
+                    playsound(self.horn_path, block=False)
+                    print(f"{Colors.CYAN}🎵 BEEP BEEP! (fallback) 🎵{Colors.RESET}")
+                except Exception as e2:
+                    print(f"{Colors.RED}All sound methods failed: {e2}{Colors.RESET}")
+            else:
+                print(f"{Colors.RED}No alternative sound method available{Colors.RESET}")
 
     def connect_vesc(self):
         """Connect to the VESC motor controller"""
+        # Get serial port configuration  
         serial_port = self.config['performance'].get('serial_port', '/dev/ttyACM0')
         baud_rate = self.config['performance'].get('baud_rate', 115200)
 
@@ -147,6 +175,16 @@ class GamepadController:
             print(f"{Colors.RED}Error connecting to VESC: {e}{Colors.RESET}")
             print(f"Make sure the VESC is connected to {serial_port} and you have permission to access it.")
             print("You may need to run: sudo chmod 666 " + serial_port)
+            
+            # List available serial ports
+            available_ports = [p.device for p in serial.tools.list_ports.comports()]
+            if available_ports:
+                print(f"{Colors.YELLOW}Available serial ports:{Colors.RESET}")
+                for port in available_ports:
+                    print(f"  - {port}")
+            else:
+                print(f"{Colors.RED}No serial ports detected. Make sure your VESC is connected.{Colors.RESET}")
+            
             return False
 
     def send_to_vesc(self, throttle_value):
@@ -173,19 +211,25 @@ class GamepadController:
             # Scale the throttle value based on the control mode
             if control_mode == 'duty_cycle':
                 # Duty cycle ranges from -1.0 to 1.0 (converted to int for PyVESC)
-                scaled_value = int(throttle_value * max_duty_cycle * 100000)
+                # PyVESC expects values from -100000 to +100000 (representing -100% to +100%)
+                duty_cycle_percent = throttle_value * max_duty_cycle
+                # Clamp to safe range
+                duty_cycle_percent = max(-1.0, min(1.0, duty_cycle_percent))
+                scaled_value = int(duty_cycle_percent * 100000)
                 msg = SetDutyCycle(scaled_value)
             elif control_mode == 'rpm':
                 # RPM control
                 scaled_value = int(throttle_value * max_rpm)
                 msg = SetRPM(scaled_value)
             elif control_mode == 'current':
-                # Current control
+                # Current control (in Amps)
                 scaled_value = throttle_value * max_current
                 msg = SetCurrent(scaled_value)
             else:
                 # Default to duty cycle
-                scaled_value = int(throttle_value * max_duty_cycle * 100000)
+                duty_cycle_percent = throttle_value * max_duty_cycle
+                duty_cycle_percent = max(-1.0, min(1.0, duty_cycle_percent))
+                scaled_value = int(duty_cycle_percent * 100000)
                 msg = SetDutyCycle(scaled_value)
 
             # Encode and send the message

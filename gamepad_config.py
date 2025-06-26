@@ -52,6 +52,8 @@ DEFAULT_CONFIG = {
         "control_mode": "duty_cycle",  # Options: 'duty_cycle', 'rpm', 'current'
         "boost_multiplier": 1.5,  # Multiplier when boost button is pressed
         "cruise_increment": 0.05, # Increment for cruise control
+        "serial_port": "/dev/ttyACM0",  # Serial port for VESC connection
+        "baud_rate": 115200,      # Baud rate for serial connection
     },
     # Servo settings
     "servo": {

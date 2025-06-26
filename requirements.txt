@@ -1,5 +1,6 @@
 pygame>=2.6.0
-play>=1.6.1
+python-play
+playsound>=1.3.0
 git+https://github.com/LiamBindle/PyVESC.git
 pyserial>=3.5
 pythoncrc>=1.2
