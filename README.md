@@ -68,14 +68,14 @@ The graphical configuration utility provides:
 ## Video Game-Style Controls
 
 | Control              | Default Button/Axis      | Function                                   |
-|----------------------|--------------------------|-------------------------------------------|
-| Right Trigger (RT)   | Axis 4                   | Throttle (forward acceleration)           |
+|----------------------|--------------------------|--------------------------------------------|
+| Right Trigger (RT)   | Axis 4                   | Throttle (forward acceleration)            |
 | Left Trigger (LT)    | Axis 2                   | Brake (reverse/deceleration)               |
 | Left Stick Left/Right| Axis 0 (Horizontal)      | Steering                                   |
 | A Button             | Button 0                 | Boost (temporary speed increase)           |
 | B Button             | Button 1                 | Emergency Stop (immediate brake)           |
 | X Button             | Button 2                 | Toggle Reverse Gear                        |
-| Y Button             | Button 3                 | Toggle Cruise Control                      |
+| Y Button             | Button 3                 | Horn Sound + Toggle Cruise Control         |
 
 ## Command Line Options
 

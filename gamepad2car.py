@@ -8,7 +8,7 @@ import sys
 import time
 
 # Set environment variables to prevent D-Bus issues
-os.environ["SDL_AUDIODRIVER"] = "dummy"
+# os.environ["SDL_AUDIODRIVER"] = "dummy"  # Commented out to enable sound
 os.environ["SDL_DBUS_SCREENSAVER_INHIBIT"] = "0"
 
 import pygame
@@ -40,6 +40,9 @@ class GamepadController:
         self.cruise_control_speed = 0.0
         self.boost_active = False
 
+        # Sound variables
+        self.horn_sound = None
+
         # Settings from configuration
         self.config = self.config_manager.config
 
@@ -68,6 +71,9 @@ class GamepadController:
         pygame.joystick.init() # Pour les manettes uniquement
         logging.debug("Joystick module initialized")
 
+        # Initialize sound system
+        self.init_sound()
+
         # Connect to the gamepad
         self.connect_gamepad()
 
@@ -95,6 +101,42 @@ class GamepadController:
         print(f"{Colors.GREEN}Connected to: {name}{Colors.RESET}")
 
         return True
+
+    def init_sound(self):
+        """Initialize pygame mixer and load sound files"""
+        try:
+            # Initialize mixer with appropriate settings for Jetson Nano
+            pygame.mixer.pre_init(frequency=22050, size=-16, channels=2, buffer=512)
+            pygame.mixer.init()
+            logging.debug("Pygame mixer initialized")
+            
+            # Load the circus horn sound
+            horn_path = os.path.join(os.path.dirname(__file__), "assets", "circus_horn.wav")
+            if os.path.exists(horn_path):
+                self.horn_sound = pygame.mixer.Sound(horn_path)
+                print(f"{Colors.GREEN}Horn sound loaded: {horn_path}{Colors.RESET}")
+                logging.debug(f"Horn sound loaded from {horn_path}")
+            else:
+                print(f"{Colors.YELLOW}Warning: Horn sound file not found at {horn_path}{Colors.RESET}")
+                logging.warning(f"Horn sound file not found at {horn_path}")
+                
+        except Exception as e:
+            print(f"{Colors.RED}Error initializing sound: {e}{Colors.RESET}")
+            logging.error(f"Error initializing sound: {e}")
+            self.horn_sound = None
+
+    def play_horn(self):
+        """Play the horn sound effect"""
+        if self.horn_sound:
+            try:
+                self.horn_sound.play()
+                print(f"{Colors.CYAN}🔊 BEEP BEEP! 🔊{Colors.RESET}")
+                logging.debug("Horn sound played")
+            except Exception as e:
+                print(f"{Colors.RED}Error playing horn sound: {e}{Colors.RESET}")
+                logging.error(f"Error playing horn sound: {e}")
+        else:
+            print(f"{Colors.YELLOW}Horn sound not available{Colors.RESET}")
 
     def connect_vesc(self):
         """Connect to the VESC motor controller"""
@@ -214,8 +256,11 @@ class GamepadController:
                     self.send_emergency_brake()
                     time.sleep(0.1)
 
-                # Toggle cruise control
+                # Toggle cruise control and play horn
                 if self.config_manager.is_button_pressed("cruise_toggle"):
+                    # Play horn sound when Y button is pressed
+                    self.play_horn()
+                    
                     if not self.cruise_control_active:
                         # Activate cruise control at current speed
                         self.cruise_control_active = True
@@ -346,7 +391,7 @@ class GamepadController:
         print("  A Button: Boost (temporary speed increase)")
         print("  X Button: Toggle reverse gear")
         print("  B Button: Emergency stop")
-        print("  Y Button: Toggle cruise control")
+        print("  Y Button: Horn sound + Toggle cruise control")
         print("  Ctrl+C: Quit")
 
         # Afficher les informations du servomoteur si activé
@@ -393,6 +438,9 @@ class GamepadController:
                 self.send_to_vesc(0.0)
                 self.serial_conn.close()
 
+            # Cleanup pygame systems
+            if pygame.mixer.get_init():
+                pygame.mixer.quit()
             pygame.quit()
             print(f"\n{Colors.GREEN}Controller stopped. Goodbye!{Colors.RESET}")
 
