@@ -12,6 +12,7 @@ import time
 os.environ["SDL_DBUS_SCREENSAVER_INHIBIT"] = "0"
 
 import pygame
+from play import play
 import serial.tools.list_ports
 from serial import Serial, SerialException
 import pyvesc
@@ -39,7 +40,8 @@ class GamepadController:
         self.boost_active = False
 
         # Sound variables
-        self.horn_sound = None
+        self.horn_available = False
+        self.horn_path = None
 
         # Settings from configuration
         self.config = self.config_manager.config
@@ -101,33 +103,29 @@ class GamepadController:
         return True
 
     def init_sound(self):
-        """Initialize pygame mixer and load sound files"""
+        """Initialize sound and verify horn sound file exists"""
         try:
-            # Initialize mixer with appropriate settings for Jetson Nano
-            pygame.mixer.pre_init(frequency=22050, size=-16, channels=2, buffer=512)
-            pygame.mixer.init()
-            logging.debug("Pygame mixer initialized")
-            
-            # Load the circus horn sound
-            horn_path = os.path.join(os.path.dirname(__file__), "assets", "circus_horn.wav")
-            if os.path.exists(horn_path):
-                self.horn_sound = pygame.mixer.Sound(horn_path)
-                print(f"{Colors.GREEN}Horn sound loaded: {horn_path}{Colors.RESET}")
-                logging.debug(f"Horn sound loaded from {horn_path}")
+            # Check if the circus horn sound file exists
+            self.horn_path = os.path.join(os.path.dirname(__file__), "assets", "circus_horn.mp3")
+            if os.path.exists(self.horn_path):
+                print(f"{Colors.GREEN}Horn sound file found: {self.horn_path}{Colors.RESET}")
+                logging.debug(f"Horn sound file found at {self.horn_path}")
+                self.horn_available = True
             else:
-                print(f"{Colors.YELLOW}Warning: Horn sound file not found at {horn_path}{Colors.RESET}")
-                logging.warning(f"Horn sound file not found at {horn_path}")
+                print(f"{Colors.YELLOW}Warning: Horn sound file not found at {self.horn_path}{Colors.RESET}")
+                logging.warning(f"Horn sound file not found at {self.horn_path}")
+                self.horn_available = False
                 
         except Exception as e:
             print(f"{Colors.RED}Error initializing sound: {e}{Colors.RESET}")
             logging.error(f"Error initializing sound: {e}")
-            self.horn_sound = None
+            self.horn_available = False
 
     def play_horn(self):
         """Play the horn sound effect"""
-        if self.horn_sound:
+        if self.horn_available:
             try:
-                self.horn_sound.play()
+                play(self.horn_path)
                 print(f"{Colors.CYAN}🔊 BEEP BEEP! 🔊{Colors.RESET}")
                 logging.debug("Horn sound played")
             except Exception as e:
