@@ -12,13 +12,6 @@ import time
 os.environ["SDL_DBUS_SCREENSAVER_INHIBIT"] = "0"
 
 import pygame
-try:
-    from playsound import playsound
-    PLAYSOUND_AVAILABLE = True
-except ImportError:
-    PLAYSOUND_AVAILABLE = False
-    print("Warning: playsound not available, using pygame mixer only for sound")
-    
 import serial.tools.list_ports
 from serial import Serial, SerialException
 import pyvesc
@@ -48,6 +41,7 @@ class GamepadController:
         # Sound variables
         self.horn_available = False
         self.horn_path = None
+        self.horn_channel = None  # Pour jouer le son sans bloquer
 
         # Settings from configuration
         self.config = self.config_manager.config
@@ -109,88 +103,38 @@ class GamepadController:
         return True
 
     def init_sound(self):
-        """Initialize sound system and locate horn sound file"""
+        """Initialise pygame mixer et charge le son du klaxon"""
         try:
-            # Set audio device to USB PnP Audio Device (card 2, device 0)
-            os.environ['SDL_AUDIODRIVER'] = 'alsa'  # Use ALSA driver for better device control
-            
-            # Try different methods to force USB audio device
-            usb_audio_attempts = [
-                {'devicename': 'hw:2,0'},  # Direct ALSA device specification (card 2, device 0)
-                {'devicename': 'plughw:2,0'},  # ALSA with plugin layer
-                {'devicename': 'USB Audio'},  # By name
-                {'devicename': 'USB PnP Audio Device'},  # Full name
-            ]
-            
-            mixer_initialized = False
-            for i, attempt in enumerate(usb_audio_attempts):
-                try:
-                    print(f"{Colors.YELLOW}Attempting to initialize with device: {attempt['devicename']}{Colors.RESET}")
-                    pygame.mixer.quit()  # Clean previous attempt
-                    pygame.mixer.pre_init(frequency=44100, size=-16, channels=2, buffer=1024, **attempt)
-                    pygame.mixer.init()
-                    print(f"{Colors.GREEN}Sound system initialized with USB audio device: {attempt['devicename']}{Colors.RESET}")
-                    mixer_initialized = True
-                    break
-                except Exception as e:
-                    print(f"{Colors.YELLOW}Attempt {i+1} failed: {e}{Colors.RESET}")
-            
-            if not mixer_initialized:
-                print(f"{Colors.YELLOW}All USB audio attempts failed. Trying with default device...{Colors.RESET}")
-                try:
-                    pygame.mixer.quit()
-                    pygame.mixer.init()
-                    print(f"{Colors.GREEN}Sound system initialized with default device{Colors.RESET}")
-                except Exception as e:
-                    print(f"{Colors.RED}Error initializing sound system: {e}{Colors.RESET}")
-                    self.horn_available = False
-                    return
-            
+            pygame.mixer.init()
             # Check for horn sound file in assets directory
             possible_paths = [
                 "assets/circus_horn.mp3",
-                "./assets/circus_horn.mp3", 
+                "./assets/circus_horn.mp3",
                 os.path.join(os.path.dirname(__file__), "assets", "circus_horn.mp3")
             ]
-            
             for path in possible_paths:
                 if os.path.exists(path):
                     self.horn_path = path
                     self.horn_available = True
                     print(f"{Colors.GREEN}Horn sound found: {path}{Colors.RESET}")
                     break
-            
             if not self.horn_available:
                 print(f"{Colors.YELLOW}No horn sound file found. Horn function will be disabled.{Colors.RESET}")
-                print(f"Place a sound file (MP3/WAV) at: assets/circus_horn.mp3")
-                
         except Exception as e:
             print(f"{Colors.RED}Error initializing sound system: {e}{Colors.RESET}")
             self.horn_available = False
 
     def play_horn(self):
-        """Play horn sound effect"""
+        """Joue le son du klaxon via pygame uniquement"""
         if not self.horn_available or not self.horn_path:
             print(f"{Colors.YELLOW}Horn sound not available{Colors.RESET}")
             return
-            
         try:
-            # Using pygame mixer for sound playback
             pygame.mixer.music.load(self.horn_path)
             pygame.mixer.music.play()
             print(f"{Colors.CYAN}🎵 BEEP BEEP! 🎵{Colors.RESET}")
-            
         except Exception as e:
             print(f"{Colors.RED}Error playing horn sound with pygame: {e}{Colors.RESET}")
-            # Fallback to playsound library if pygame fails
-            if PLAYSOUND_AVAILABLE:
-                try:
-                    playsound(self.horn_path, block=False)
-                    print(f"{Colors.CYAN}🎵 BEEP BEEP! (fallback) 🎵{Colors.RESET}")
-                except Exception as e2:
-                    print(f"{Colors.RED}All sound methods failed: {e2}{Colors.RESET}")
-            else:
-                print(f"{Colors.RED}No alternative sound method available{Colors.RESET}")
 
     def connect_vesc(self):
         """Connect to the VESC motor controller"""
@@ -298,8 +242,45 @@ class GamepadController:
         except Exception as e:
             print(f"{Colors.RED}Error sending command to VESC: {e}{Colors.RESET}")
 
+    def update_controls(self):
+        """Lecture des triggers et calcul du throttle net (RT-LT), avec deadzone"""
+        if self.joystick is None:
+            return
+        try:
+            # Emergency stop
+            if self.config_manager.is_button_pressed("emergency_stop"):
+                self.send_emergency_brake()
+                return
+
+            # Check boost button
+            self.boost_active = self.config_manager.is_button_pressed("boost")
+
+            # Lecture triggers normalisés (0 repos, 1 appuyé)
+            throttle_input = self.config_manager.get_control_value("throttle")
+            brake_input = self.config_manager.get_control_value("brake")
+
+            # Deadzone stricte :
+            if throttle_input < 0.05:
+                throttle_input = 0.0
+            if brake_input < 0.05:
+                brake_input = 0.0
+
+            # Net throttle = RT - LT
+            net_throttle = throttle_input - brake_input
+
+            # Clamp
+            if abs(net_throttle) < 0.01:
+                net_throttle = 0.0
+            self.throttle = max(-1.0, min(1.0, net_throttle))
+
+            # Steering control
+            self.steering = self.config_manager.get_control_value("steering")
+
+        except Exception as e:
+            print(f"{Colors.RED}Error reading gamepad: {e}{Colors.RESET}")
+
     def handle_events(self):
-        """Process events and controller inputs"""
+        """Gestion des événements, dont le klaxon sur Y"""
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 self.running = False
@@ -355,36 +336,6 @@ class GamepadController:
 
             except Exception as e:
                 print(f"{Colors.RED}Error applying emergency brake: {e}{Colors.RESET}")
-
-    def update_controls(self):
-        """Read current gamepad state and update controls"""
-        if self.joystick is None:
-            return
-
-        try:
-            # Check for emergency stop
-            if self.config_manager.is_button_pressed("emergency_stop"):
-                self.send_emergency_brake()
-                return
-
-            # Check boost button
-            self.boost_active = self.config_manager.is_button_pressed("boost")
-
-            # Normal throttle control with trigger-based input
-            throttle_input = self.config_manager.get_control_value("throttle")
-            brake_input = self.config_manager.get_control_value("brake")
-
-            # Calculate net throttle: throttle - brake (racing-style controls)
-            self.throttle = throttle_input - brake_input
-
-            # Clamp the result to valid range
-            self.throttle = max(-1.0, min(1.0, self.throttle))
-
-            # Steering control
-            self.steering = self.config_manager.get_control_value("steering")
-
-        except Exception as e:
-            print(f"{Colors.RED}Error reading gamepad: {e}{Colors.RESET}")
 
     def display_controls(self):
         """Display current control state"""
