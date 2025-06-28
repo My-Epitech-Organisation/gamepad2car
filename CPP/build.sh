@@ -4,6 +4,7 @@
 echo "=== Update Submodule ==="
 git submodule update --init --recursive
 
+./setup_vesc_environement.sh
 
 echo "=== Building C++ VESC Control Program ==="
 mkdir -p build
