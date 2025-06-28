@@ -140,7 +140,7 @@ class GamepadController:
         """Connect to the VESC motor controller"""
         # Get serial port configuration  
         serial_port = self.config['performance'].get('serial_port', '/dev/ttyACM0')
-        baud_rate = self.config['performance'].get('baud_rate', 115200)
+        baud_rate = self.config['performance'].get('baud_rate',     )
 
         try:
             self.serial_conn = Serial(serial_port, baud_rate, timeout=0.05)
