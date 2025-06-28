@@ -1,5 +1,48 @@
-from PyVESC.pyvesc import *
-from PyVESC.pyvesc.VESC.VESC import VESC
+import sys
+import os
+# Ajouter le chemin absolu des modules PyVESC si nécessaire
+current_dir = os.path.dirname(os.path.abspath(__file__))
+pyvesc_path = os.path.join(current_dir, 'PyVESC')
+if pyvesc_path not in sys.path:
+    sys.path.append(pyvesc_path)
+
+try:
+    from PyVESC.pyvesc import *
+    from PyVESC.pyvesc.VESC.VESC import VESC
+except ImportError:
+    # Essayer une importation relative si la première échoue
+    try:
+        from pyvesc import *
+        from pyvesc.VESC.VESC import VESC
+    except ImportError:
+        print("Erreur d'importation PyVESC. Chemins de recherche Python:", sys.path)
+        print("Mode simulation activé (pas de connexion VESC réelle)")
+        
+        # Créer une classe VESC de simulation
+        class VESC:
+            def __init__(self, port=None, baudrate=None):
+                self.port = port
+                self.serial_port = type('obj', (object,), {'close': lambda: None})
+                print(f"VESC simulé créé (port={port}, baudrate={baudrate})")
+                
+            def set_duty_cycle(self, duty_cycle):
+                print(f"SIMULATION: set_duty_cycle({duty_cycle})")
+                
+            def set_servo(self, position):
+                print(f"SIMULATION: set_servo({position})")
+                
+            def set_current(self, current):
+                print(f"SIMULATION: set_current({current})")
+                
+            def get_measurements(self):
+                return type('obj', (object,), {
+                    'rpm': 0,
+                    'duty_now': 0,
+                    'v_in': 12.0,
+                    'current_motor': 0,
+                    'current_in': 0
+                })
+
 import time
 
 

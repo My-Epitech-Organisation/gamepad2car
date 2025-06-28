@@ -24,6 +24,11 @@ if [ $? -ne 0 ]; then
 fi
 
 echo ""
+echo "=== Copy bin files ==="
+echo ""
+    cp gamecar2pad ../ && cd ..
+
+echo ""
 echo "=== Running VESC Control Test ==="
 echo ""
 # Exécution du programme

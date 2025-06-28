@@ -22,7 +22,13 @@ public:
         Py_Initialize();
 
         PyRun_SimpleString("import sys");
+        PyRun_SimpleString("import os");
+        PyRun_SimpleString("current_dir = os.path.dirname(os.path.abspath(__file__)) if '__file__' in globals() else os.getcwd()");
         PyRun_SimpleString("sys.path.append('.')");
+        PyRun_SimpleString("sys.path.append('./PyVESC')");
+        PyRun_SimpleString("sys.path.append(os.path.join(os.getcwd(), 'PyVESC'))");
+        PyRun_SimpleString("print('Current working directory:', os.getcwd())");
+        PyRun_SimpleString("print('Python paths:', sys.path)");
 
         PyObject* py_module_name = PyUnicode_FromString(module_name.c_str());
         PyObject* py_module = PyImport_Import(py_module_name);
