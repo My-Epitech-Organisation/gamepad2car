@@ -113,5 +113,8 @@ int main()
     std::cout << "Result: " << result << std::endl;
     
     std::cout << "Test completed successfully" << std::endl;
+    
+    // Finaliser l'interpréteur Python
+    PythonCaller::finalize();
     return 0;
 }

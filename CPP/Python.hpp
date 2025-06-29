@@ -6,7 +6,38 @@
 #include <type_traits>
 
 class PythonCaller {
+private:
+    static bool is_initialized;
+
 public:
+    // Initialiser l'interpréteur Python une seule fois
+    static void initialize() {
+        if (!is_initialized) {
+            Py_Initialize();
+            
+            // Configurer les chemins Python
+            PyRun_SimpleString("import sys");
+            PyRun_SimpleString("import os");
+            PyRun_SimpleString("current_dir = os.path.dirname(os.path.abspath(__file__)) if '__file__' in globals() else os.getcwd()");
+            PyRun_SimpleString("sys.path.append('.')");
+            PyRun_SimpleString("sys.path.append('./PyVESC')");
+            PyRun_SimpleString("sys.path.append(os.path.join(os.getcwd(), 'PyVESC'))");
+            PyRun_SimpleString("print('Initializing Python interpreter')");
+            PyRun_SimpleString("print('Current working directory:', os.getcwd())");
+            PyRun_SimpleString("print('Python paths:', sys.path)");
+            
+            is_initialized = true;
+        }
+    }
+    
+    // Finaliser l'interpréteur Python à la fin du programme
+    static void finalize() {
+        if (is_initialized) {
+            Py_Finalize();
+            is_initialized = false;
+        }
+    }
+    
     template<typename T>
     static PyObject* to_python(const T &value);
 
@@ -19,7 +50,7 @@ public:
                                               const std::string& function_name,
                                               Args&&... args)
     {
-        Py_Initialize();
+        initialize(); // Initialiser si ce n'est pas déjà fait
 
         PyRun_SimpleString("import sys");
         PyRun_SimpleString("import os");
@@ -67,8 +98,12 @@ public:
 
         Ret value = from_python<Ret>(result);
         Py_DECREF(result);
-
-        Py_Finalize();
+        
+        // Ne pas finaliser ici pour conserver l'état entre les appels
+        // Py_Finalize() sera appelé par finalize() à la fin du programme
         return value;
     }
 };
+
+// Initialisation de la variable statique
+bool PythonCaller::is_initialized = false;
