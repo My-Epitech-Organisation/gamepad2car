@@ -22,8 +22,9 @@ fi
 
 echo "Installation des dépendances Python..."
 cd PyVESC
-/usr/local/bin/python3.10 -m pip install -r requirements.txt
-/usr/local/bin/python3.10 -m pip install pyserial
+pip3 install .
+pip3 install -r requirements.txt
+pip3 install pyserial
 if [ $? -ne 0 ]; then
     echo "Erreur lors de l'installation des dépendances!"
     exit 1
