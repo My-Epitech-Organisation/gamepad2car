@@ -19,7 +19,7 @@ if pyvesc_path not in sys.path:
     sys.path.append(pyvesc_path)
 
 # Variable pour activer/désactiver la simulation
-USE_SIMULATION = True  # Activé par défaut pour éviter les problèmes d'incompatibilité
+USE_SIMULATION = False  # Activé par défaut pour éviter les problèmes d'incompatibilité
 
 def find_vesc_port():
     """
@@ -78,8 +78,8 @@ def init_vesc(port=None, max_duty_cycle=0.6):
             return True
             
         # Import les modules PyVESC
-        from PyVESC.pyvesc import encode
-        from PyVESC.pyvesc.VESC.messages.setters import SetDutyCycle, SetServoPosition
+        from pyvesc import encode
+        from pyvesc.VESC.messages.setters import SetDutyCycle, SetServoPosition
             
         # Détection automatique du port
         if port is None:
