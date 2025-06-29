@@ -47,3 +47,8 @@ template<>
 std::string PythonCaller::from_python<std::string>(PyObject* obj) {
     return std::string(PyUnicode_AsUTF8(obj));
 }
+
+template<>
+bool PythonCaller::from_python<bool>(PyObject* obj) {
+    return PyObject_IsTrue(obj) == 1;
+}
