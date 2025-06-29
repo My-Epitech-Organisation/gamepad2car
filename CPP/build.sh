@@ -4,6 +4,8 @@
 echo "=== Update Submodule ==="
 git submodule update --init --recursive
 
+mv setters.py.move PyVESC/pyvesc/VESC/messages/setters.py
+
 ./setup_vesc_environment.sh
 
 echo "=== Building C++ VESC Control Program ==="
