@@ -11,14 +11,16 @@ mkdir -p build
 cd build
 
 # Génération avec CMake
-cmake ..
+cmake .. -DPython3_EXECUTABLE=/usr/local/bin/python3.10 \
+      -DPython3_INCLUDE_DIR=/usr/local/include/python3.10 \
+      -DPython3_LIBRARY=/usr/local/lib/libpython3.10.so
 if [ $? -ne 0 ]; then
     echo "CMake configuration failed!"
     exit 1
 fi
 
 # Compilation
-make
+cmake --build .
 if [ $? -ne 0 ]; then
     echo "Compilation failed!"
     exit 1

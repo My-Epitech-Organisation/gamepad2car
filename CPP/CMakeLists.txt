@@ -14,4 +14,6 @@ target_link_libraries(gamecar2pad
     ${Python3_LIBRARIES}
     dl
     m
+    pthread
+    util
 )
