@@ -1,16 +1,16 @@
 cmake_minimum_required(VERSION 3.10)
-project(gamecar2pad)
+project(gamepad2car)
 
 find_package(Python3 REQUIRED COMPONENTS Interpreter Development)
 
-add_executable(gamecar2pad
+add_executable(gamepad2car
     main.cpp
     Python.cpp
 )
 
-target_include_directories(gamecar2pad PRIVATE ${Python3_INCLUDE_DIRS})
+target_include_directories(gamepad2car PRIVATE ${Python3_INCLUDE_DIRS})
 
-target_link_libraries(gamecar2pad
+target_link_libraries(gamepad2car
     ${Python3_LIBRARIES}
     dl
     m
