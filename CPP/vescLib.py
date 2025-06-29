@@ -12,6 +12,40 @@ if pyvesc_path not in sys.path:
 # Variable pour activer/désactiver la simulation
 USE_SIMULATION = False
 
+def find_vesc_port():
+    """
+    Recherche automatiquement le port série du VESC
+    
+    Returns:
+        Le chemin du port série du VESC ou None s'il n'est pas trouvé
+    """
+    try:
+        import serial.tools.list_ports
+        ports = list(serial.tools.list_ports.comports())
+        
+        # Chercher d'abord les ports contenant "VESC" dans la description
+        for port in ports:
+            if "VESC" in port.description:
+                return port.device
+                
+        # Ensuite chercher les ports contenant "ChibiOS" (firmware STM32 du VESC)
+        for port in ports:
+            if "ChibiOS" in port.description:
+                return port.device
+        
+        # Si toujours pas trouvé, essayer /dev/ttyACM0 ou /dev/ttyACM1 s'ils existent
+        for port in ports:
+            if "ttyACM" in port.device:
+                return port.device
+                
+        # Rien trouvé
+        if ports:
+            # Retourner le premier port disponible
+            return ports[0].device
+        return '/dev/ttyACM0'  # Port par défaut
+    except:
+        return '/dev/ttyACM0'  # En cas d'erreur, utiliser le port par défaut
+
 try:
     if not USE_SIMULATION:
         from PyVESC.pyvesc import *
@@ -61,15 +95,25 @@ class Motor:
     motor.stop()            # Arrêt complet
     """
     
-    def __init__(self, port='/dev/ttyACM0', baudrate=115200, max_duty_cycle=0.3):
+    def __init__(self, port=None, baudrate=115200, max_duty_cycle=0.3):
         """
         Initialise la connexion au VESC
         
         Args:
-            port: Port série du VESC (défaut: /dev/ttyACM0)
+            port: Port série du VESC (auto-détecté si None)
             baudrate: Débit en bauds (défaut: 115200)
             max_duty_cycle: Duty cycle maximum (0.0 à 1.0) pour limiter la puissance
         """
+        # Définir d'abord les attributs essentiels
+        self._center_pos = 0.5
+        self._max_duty_cycle = max_duty_cycle
+        self._is_connected = False
+        
+        # Auto-détection du port si non spécifié
+        if port is None:
+            port = find_vesc_port()
+            print(f"Port VESC auto-détecté: {port}")
+        
         try:
             self._vesc = VESC(port, baudrate=baudrate)
             self._max_duty_cycle = max_duty_cycle
@@ -165,10 +209,26 @@ class Motor:
         if not self._is_connected:
             return
         try:
+            # Arrêter le moteur et centrer le servo
             self.stop_motor()
             self.center_steering()
             time.sleep(0.1)  # Attendre que les commandes soient traitées
-            self._vesc.serial_port.close()  # Fermer proprement la connexion série
+            
+            # Arrêter le thread de heartbeat si présent (attribut spécifique au VESC)
+            # Pour éviter l'erreur "PortNotOpenError" après la fermeture
+            if hasattr(self._vesc, '_heartbeat_thread') and self._vesc._heartbeat_thread is not None:
+                try:
+                    # Arrêter proprement le thread s'il existe un moyen de le faire
+                    if hasattr(self._vesc, '_heartbeat_stop') and isinstance(self._vesc._heartbeat_stop, bool):
+                        self._vesc._heartbeat_stop = True
+                        time.sleep(0.1)  # Laisser le temps au thread de se terminer
+                except:
+                    pass  # Ignorer les erreurs lors de l'arrêt du thread
+            
+            # Fermer le port série
+            if hasattr(self._vesc, 'serial_port') and self._vesc.serial_port is not None:
+                self._vesc.serial_port.close()
+                
             self._is_connected = False
             print("Connexion VESC fermée")
         except Exception as e:
@@ -186,13 +246,29 @@ class Motor:
             
         try:
             measurements = self._vesc.get_measurements()
-            return {
-                "rpm": measurements.rpm,
-                "duty_cycle": measurements.duty_now,
-                "voltage": measurements.v_in,
-                "motor_current": measurements.current_motor,
-                "input_current": measurements.current_in
-            }
+            status = {}
+            
+            # Tester la présence de chaque attribut avant de l'utiliser
+            if hasattr(measurements, 'rpm'):
+                status["rpm"] = measurements.rpm
+            if hasattr(measurements, 'duty_now'):
+                status["duty_cycle"] = measurements.duty_now
+            elif hasattr(measurements, 'duty_cycle'):  # Nom alternatif possible
+                status["duty_cycle"] = measurements.duty_cycle
+            else:
+                status["duty_cycle"] = 0  # Valeur par défaut
+                
+            if hasattr(measurements, 'v_in'):
+                status["voltage"] = measurements.v_in
+            elif hasattr(measurements, 'voltage_in'):  # Nom alternatif possible
+                status["voltage"] = measurements.voltage_in
+                
+            if hasattr(measurements, 'current_motor'):
+                status["motor_current"] = measurements.current_motor
+            if hasattr(measurements, 'current_in'):
+                status["input_current"] = measurements.current_in
+                
+            return status
         except Exception as e:
             print(f"Erreur lors de la récupération des mesures: {e}")
             return {"error": str(e)}

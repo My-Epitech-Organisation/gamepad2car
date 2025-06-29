@@ -11,12 +11,12 @@ import time
 # Instance globale du moteur
 _motor = None
 
-def initialize_motor(port='/dev/ttyACM0', baudrate=115200, max_duty_cycle=0.3):
+def initialize_motor(port=None, baudrate=115200, max_duty_cycle=0.3):
     """
     Initialise le moteur VESC
     
     Args:
-        port: Port série du VESC
+        port: Port série du VESC (auto-détecté si None)
         baudrate: Débit en bauds
         max_duty_cycle: Duty cycle maximum (0.0 à 1.0) pour limiter la puissance
         
