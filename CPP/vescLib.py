@@ -19,7 +19,7 @@ if pyvesc_path not in sys.path:
     sys.path.append(pyvesc_path)
 
 # Variable pour activer/désactiver la simulation
-USE_SIMULATION = False
+USE_SIMULATION = True  # Activé par défaut pour éviter les problèmes d'incompatibilité
 
 def find_vesc_port():
     """
