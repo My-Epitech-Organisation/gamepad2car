@@ -104,6 +104,3 @@ public:
         return value;
     }
 };
-
-// Initialisation de la variable statique
-bool PythonCaller::is_initialized = false;
