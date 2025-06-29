@@ -20,10 +20,10 @@ public:
             PyRun_SimpleString("import os");
             PyRun_SimpleString("current_dir = os.path.dirname(os.path.abspath(__file__)) if '__file__' in globals() else os.getcwd()");
             PyRun_SimpleString("sys.path.append('.')");
-            PyRun_SimpleString("sys.path.append('venv/lib64/python3.10/site-packages/')");
+            PyRun_SimpleString("sys.path.append('./PyVESC')");
             PyRun_SimpleString("print('Initializing Python interpreter')");
-            PyRun_SimpleString("print('Current working directory:', os.getcwd())");
-            PyRun_SimpleString("print('Python paths:', sys.path)");
+            PyRun_SimpleString("print('Current working directory:' + os.getcwd())");
+            PyRun_SimpleString("print('Python paths:' + str(sys.path))");
             
             is_initialized = true;
         }
@@ -54,8 +54,8 @@ public:
         PyRun_SimpleString("import sys");
         PyRun_SimpleString("import os");
         PyRun_SimpleString("current_dir = os.path.dirname(os.path.abspath(__file__)) if '__file__' in globals() else os.getcwd()");
-        PyRun_SimpleString("print('Current working directory:', os.getcwd())");
-        PyRun_SimpleString("print('Python paths:', sys.path)");
+        PyRun_SimpleString("print('Current working directory: ' + os.getcwd())");
+        PyRun_SimpleString("print('Python paths: ' + str(sys.path))");
 
         PyObject* py_module_name = PyUnicode_FromString(module_name.c_str());
         PyObject* py_module = PyImport_Import(py_module_name);
