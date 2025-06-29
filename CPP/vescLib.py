@@ -95,19 +95,20 @@ class Motor:
     motor.stop()            # Arrêt complet
     """
     
-    def __init__(self, port=None, baudrate=115200, max_duty_cycle=0.3):
+    def __init__(self, port=None, baudrate=115200, max_duty_cycle=0.6):
         """
         Initialise la connexion au VESC
         
         Args:
             port: Port série du VESC (auto-détecté si None)
             baudrate: Débit en bauds (défaut: 115200)
-            max_duty_cycle: Duty cycle maximum (0.0 à 1.0) pour limiter la puissance
+            max_duty_cycle: Duty cycle maximum (0.0 à 1.0) pour limiter la puissance (défaut: 0.6 = 60%)
         """
         # Définir d'abord les attributs essentiels
         self._center_pos = 0.5
         self._max_duty_cycle = max_duty_cycle
         self._is_connected = False
+        self._servo_initialized = False
         
         # Auto-détection du port si non spécifié
         if port is None:
@@ -140,9 +141,28 @@ class Motor:
         # Limiter la valeur entre 0 et 1
         position = max(0.0, min(position, 1.0))
         
+        # Augmenter l'amplitude du mouvement en élargissant la plage
+        # Mapper la position de [0,1] vers une plage plus large [0.05, 0.95] pour le servo
+        # Cela donne une plus grande amplitude de mouvement
+        adjusted_position = 0.05 + position * 0.9
+        
         try:
-            self._vesc.set_servo(position)
-            print(f"Servo positionné à {position:.2f}")
+            # Force une initialisation du servo avant de définir la position réelle
+            # Cela peut aider si le servo était en mode sommeil ou nécessite un réveil
+            if not hasattr(self, '_servo_initialized'):
+                print("Initialisation du servo...")
+                # Envoyer une séquence d'initialisation
+                self._vesc.set_servo(0.5)  # Centre
+                time.sleep(0.1)
+                self._vesc.set_servo(0.6)  # Légèrement à droite
+                time.sleep(0.1)
+                self._vesc.set_servo(0.5)  # Retour au centre
+                time.sleep(0.1)
+                self._servo_initialized = True
+            
+            # Maintenant définir la position réelle
+            self._vesc.set_servo(adjusted_position)
+            print(f"Servo positionné à {position:.2f} (ajusté à {adjusted_position:.2f})")
         except Exception as e:
             print(f"Erreur de contrôle du servo: {e}")
     
@@ -159,12 +179,23 @@ class Motor:
         # Limiter la valeur entre -1 et 1
         throttle = max(-1.0, min(throttle, 1.0))
         
-        # Convertir en valeur de duty cycle avec limitation de puissance
-        duty_cycle = throttle * self._max_duty_cycle * 100000  # Conversion pour VESC (-100000 à 100000)
+        # Ajouter une zone morte et une courbe de réponse non linéaire
+        if abs(throttle) < 0.05:
+            # Zone morte pour éviter les micro-mouvements
+            duty_cycle = 0
+        else:
+            # Appliquer un mapping exponentiel pour une meilleure réponse de l'accélération
+            # Conserver le signe de throttle mais exponentiel sa magnitude
+            # y = sign(x) * x^2 donne une courbe plus douce au début et plus agressive en fin de course
+            sign = 1 if throttle >= 0 else -1
+            throttle_adjusted = sign * (abs(throttle) ** 1.5)  # Exposant 1.5 pour une courbe plus agressive
+            
+            # Convertir en valeur de duty cycle avec limitation de puissance
+            duty_cycle = throttle_adjusted * self._max_duty_cycle * 100000  # Conversion pour VESC (-100000 à 100000)
         
         try:
             self._vesc.set_duty_cycle(int(duty_cycle))
-            print(f"Vitesse réglée à {throttle:.2f} (duty cycle: {duty_cycle})")
+            print(f"Vitesse réglée à {throttle:.2f} (ajusté à {int(duty_cycle)}, max_duty: {self._max_duty_cycle})")
         except Exception as e:
             print(f"Erreur de contrôle du moteur: {e}")
     
