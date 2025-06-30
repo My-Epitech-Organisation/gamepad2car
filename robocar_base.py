@@ -1,6 +1,7 @@
 # Contenu de robocar_base.py
 
 import traceback
+import time
 from pyvesc.VESC import VESC
 
 # --- CONFIGURATION GLOBALE DU ROBOCAR ---
@@ -32,6 +33,12 @@ class Robocar:
         self.steering_right_limit = steering_right
         self.steering_center_pos = steering_center
 
+        # Variables pour le lissage et la protection
+        self.current_throttle = 0.0
+        self.previous_throttle = 0.0
+        self.max_throttle_change = 0.15
+        self.throttle_filter_alpha = 0.7
+
         print("Robocar initialisé. Prêt à se connecter.")
 
     @property
@@ -60,20 +67,59 @@ class Robocar:
         if self.is_connected:
             print("Arrêt d'urgence et déconnexion...")
             try:
+                for i in range(5):
+                    try:
+                        self.set_throttle(self.current_throttle * (4-i)/5)
+                        time.sleep(0.05)
+                    except:
+                        break
+
                 self.stop_motor()
                 self.center_steering()
+                time.sleep(0.1)
                 self.vesc.close()
             except Exception as e:
                 print(f"Erreur lors de la déconnexion: {e}")
             finally:
                 self.vesc = None
+                self.current_throttle = 0.0
+                self.previous_throttle = 0.0
                 print("Déconnecté.")
 
     def set_throttle(self, value):
-        """Définit la puissance du moteur (-1.0 à 1.0)."""
+        """Définit la puissance du moteur avec lissage et protection (-1.0 à 1.0)."""
         if not self.is_connected: return
-        duty_cycle = self.throttle_max_power * max(min(value, 1.0), -1.0)
-        self.vesc.set_duty_cycle(duty_cycle)
+
+        # Borner la valeur d'entrée
+        value = max(min(value, 1.0), -1.0)
+
+        # Appliquer un filtre passe-bas pour lisser les changements brusques
+        filtered_value = (self.throttle_filter_alpha * value + 
+                         (1 - self.throttle_filter_alpha) * self.current_throttle)
+
+        # Limiter le taux de changement pour éviter les pics de courant
+        throttle_change = filtered_value - self.current_throttle
+        if abs(throttle_change) > self.max_throttle_change:
+            if throttle_change > 0:
+                filtered_value = self.current_throttle + self.max_throttle_change
+            else:
+                filtered_value = self.current_throttle - self.max_throttle_change
+
+        # Stocker la valeur actuelle pour la prochaine itération
+        self.current_throttle = filtered_value
+
+        # Calculer et envoyer la commande au VESC
+        duty_cycle = self.throttle_max_power * filtered_value
+
+        try:
+            self.vesc.set_duty_cycle(duty_cycle)
+        except Exception as e:
+            print(f"Erreur lors de l'envoi de la commande moteur: {e}")
+            # Tentative de reconnexion si la connexion est perdue
+            if "Input/output error" in str(e):
+                print("Connexion perdue, tentative de reconnexion...")
+                self.disconnect()
+                time.sleep(0.5)  # Pause avant reconnexion
 
     def set_steering(self, value):
         """Définit l'angle de direction (-1.0 à 1.0)."""
@@ -86,16 +132,52 @@ class Robocar:
         self.vesc.set_servo(servo_pos)
 
     def stop_motor(self):
-        """Méthode simple pour arrêter le moteur."""
-        self.set_throttle(0)
+        """Méthode simple pour arrêter le moteur progressivement."""
+        # Arrêt progressif pour éviter les pics
+        for i in range(5):
+            try:
+                self.set_throttle(self.current_throttle * (4-i)/5)
+                time.sleep(0.02)
+            except:
+                break
+        self.current_throttle = 0.0
+
+    def emergency_stop(self):
+        """Arrêt d'urgence immédiat (peut causer des pics de courant)."""
+        if not self.is_connected: return
+        try:
+            self.vesc.set_duty_cycle(0)
+            self.current_throttle = 0.0
+        except Exception as e:
+            print(f"Erreur lors de l'arrêt d'urgence: {e}")
 
     def center_steering(self):
         """Méthode simple pour remettre les roues droites."""
         self.set_steering(0)
 
+    def set_throttle_smoothing(self, alpha=0.7, max_change=0.15):
+        """Configure le lissage du throttle.
+        
+        Args:
+            alpha: Coefficient de lissage (0.0 = très lisse, 1.0 = pas de lissage)
+            max_change: Changement maximum par commande (0.0 à 1.0)
+        """
+        self.throttle_filter_alpha = max(0.0, min(1.0, alpha))
+        self.max_throttle_change = max(0.01, min(1.0, max_change))
+        print(f"Lissage configuré: alpha={self.throttle_filter_alpha}, max_change={self.max_throttle_change}")
+
+    def get_throttle_status(self):
+        """Retourne l'état actuel du throttle."""
+        return {
+            'current': self.current_throttle,
+            'max_power': self.throttle_max_power,
+            'smoothing_alpha': self.throttle_filter_alpha,
+            'max_change': self.max_throttle_change
+        }
+
     def incr_throttle_max(self):
         """Augmente la puissance maximale du moteur"""
-        if self.throttle_max_power < 1.0:
+        if self.throttle_max_power < 0.5:
             self.throttle_max_power += 0.1
 
     def decr_throttle_max(self):

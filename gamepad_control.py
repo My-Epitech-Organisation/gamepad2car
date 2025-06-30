@@ -23,6 +23,8 @@ SPEED_UP = 5
 
 # Zone morte pour la direction afin d'aller bien droit
 JOYSTICK_DEADZONE = 0.1
+# Seuil de détection de changement brusque de throttle
+THROTTLE_CHANGE_THRESHOLD = 0.3
 # --------------------------------------------------------
 
 def main():
@@ -46,10 +48,16 @@ def main():
 
     car = Robocar(**ROBOCAR_CONFIG)
 
+    previous_throttle = 0.0
+    sudden_change_count = 0
+
     try:
         if not car.connect():
             print("Impossible de démarrer. Vérifiez la connexion VESC.")
             return
+
+        car.set_throttle_smoothing(alpha=0.6, max_change=0.12)
+        print("Lissage de protection activé pour éviter les pics de courant.\n")
 
         running = True
         while running:
@@ -77,13 +85,25 @@ def main():
             # 3. Calculer l'accélération finale
             throttle_value = forward_power - reverse_power
 
-            # 4. Afficher les valeurs en temps réel
-            print(f"Accélération: {throttle_value:>6.2f} | Direction: {steering_value:>5.2f}", end="\r")
+            # 4. Détecter les changements brusques qui peuvent causer des pics
+            throttle_change = abs(throttle_value - previous_throttle)
+            if throttle_change > THROTTLE_CHANGE_THRESHOLD:
+                sudden_change_count += 1
+                if sudden_change_count > 3:  # Plus de 3 changements brusques
+                    print(f"\n⚠️  ATTENTION: Changements brusques détectés! Réduisez la vitesse de manœuvre.")
+                    sudden_change_count = 0  # Reset du compteur
+            else:
+                sudden_change_count = max(0, sudden_change_count - 1)  # Diminue progressivement
 
-            # 5. Envoyer les commandes à la voiture
+            # 5. Afficher les valeurs en temps réel avec statut de protection
+            status_icon = "🔒" if throttle_change > THROTTLE_CHANGE_THRESHOLD else "✅"
+            print(f"{status_icon} Accél: {throttle_value:>6.2f} | Dir: {steering_value:>5.2f} | Max: {car.throttle_max_power:.1f}", end="\r")
+
+            # 6. Envoyer les commandes à la voiture
             car.set_throttle(throttle_value)
             car.set_steering(steering_value)
-
+            
+            previous_throttle = throttle_value
             time.sleep(0.02)
 
     except Exception as e:
