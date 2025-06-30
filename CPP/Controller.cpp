@@ -15,8 +15,10 @@ void Controller::loop()
 {
     while (this->_isRunning) {
         sf::Joystick::update();
+        // Joystick droit axe X (U) pour le steering
         float axisU = sf::Joystick::getAxisPosition(this->_joystickId, sf::Joystick::U);
-        float steering = (axisU + 100.f) / 200.f;
+        // Mapping: -100->0 | 0->0.5 | 100->1
+        float steering = 0.5f + (axisU / 200.f);
         float triggerDroit = sf::Joystick::getAxisPosition(this->_joystickId, sf::Joystick::R); // entre -100 et 100
         float triggerGauche = sf::Joystick::getAxisPosition(this->_joystickId, sf::Joystick::Z);
         float triggerDroitNorm = triggerDroit > this->_deadZone ? (triggerDroit / 100.f) : 0.f;
