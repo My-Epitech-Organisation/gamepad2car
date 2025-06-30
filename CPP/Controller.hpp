@@ -20,12 +20,12 @@ class Controller {
         float _deadZone = 10.0f;
         float _speed;
         float _steering;
-        std::map<std::string, sf::Music> _musicList;
+        std::map<std::string, std::unique_ptr<sf::Music>> _musicList;
         std::mutex _mtx;
         std::thread _mThread;
         std::atomic<bool> _isRunning = true;
 
-        std::unique_ptr<sf::Music> _initMusic(const std::string &path, float volume = 50.f);
+        void _loadMusic(const std::string &id, const std::string &path, float volume = 50.f);
     public:
         void loop();
         float getSpeed();

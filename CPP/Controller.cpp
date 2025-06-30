@@ -28,7 +28,8 @@ void Controller::loop()
             speed = triggerDroitNorm - triggerGaucheNorm;
         }
         if (sf::Joystick::isButtonPressed(this->_joystickId, 3)) {
-            std::cout << "\n>>> Bouton Y pressé !" << std::endl;
+            std::cout << "\n>>> Bouton Y pressé ! Klaxon activé !" << std::endl;
+            this->playSound("horn");
         }
         this->_mtx.lock();
         this->_speed = speed;
@@ -40,23 +41,31 @@ void Controller::loop()
     }
 }
 
-std::unique_ptr<sf::Music> Controller::_initMusic(const std::string & path, float vol)
+void Controller::_loadMusic(const std::string &id, const std::string &path, float vol)
 {
-    std::unique_ptr<sf::Music> music = std::make_unique<sf::Music>();
-
-    music->openFromFile(path);
+    auto music = std::make_unique<sf::Music>();
+    
+    if (!music->openFromFile(path)) {
+        std::cerr << "Erreur lors du chargement du fichier audio: " << path << std::endl;
+        return;
+    }
+    
     music->setVolume(vol);
-    return music;
+    music->setLoop(false);
+    
+    // Stocker la musique dans la map
+    _musicList[id] = std::move(music);
 }
 
-void playSound()
+void Controller::playSound(const std::string &id)
 {
-    sf::Music music;
-    if (music.openFromFile("nice_music.ogg"))
- 
-    // Play the music
-    music.play();
- 
+    auto it = _musicList.find(id);
+    if (it != _musicList.end() && it->second) {
+        it->second->stop();  // Arrêter si déjà en cours
+        it->second->play();  // Jouer le son
+    } else {
+        std::cerr << "Son non trouvé: " << id << std::endl;
+    }
 }
 
 float Controller::getSpeed()
@@ -80,7 +89,7 @@ Controller::Controller()
         std::cerr << "Aucun joystick connecté sur l'ID 0." << std::endl;
         throw std::runtime_error("Error no controller detected");
     }
-    this->_musicList.emplace("horn", "assets/circus_horn.mp3");
+    _loadMusic("horn", "assets/circus_horn.mp3", 50.f);
     this->_mThread = std::thread([this]() {
         this->loop();
     });
