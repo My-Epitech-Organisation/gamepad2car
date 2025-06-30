@@ -9,6 +9,11 @@ add_executable(gamepad2car
     Controller.cpp
 )
 
+# Ajouter l'exécutable de test pour la manette
+add_executable(joystickTest
+    joystickHandle.cpp
+)
+
 target_include_directories(gamepad2car PRIVATE ${Python3_INCLUDE_DIRS})
 
 target_link_libraries(gamepad2car
@@ -19,4 +24,10 @@ target_link_libraries(gamepad2car
     util
     sfml-audio
     sfml-window
+)
+
+# Lier les bibliothèques SFML pour le test de manette
+target_link_libraries(joystickTest
+    sfml-window
+    pthread
 )

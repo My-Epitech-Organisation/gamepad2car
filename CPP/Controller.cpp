@@ -61,8 +61,8 @@ void Controller::playSound(const std::string &id)
 {
     auto it = _musicList.find(id);
     if (it != _musicList.end() && it->second) {
-        it->second->stop();  // Arrêter si déjà en cours
-        it->second->play();  // Jouer le son
+        it->second->stop();
+        it->second->play();
     } else {
         std::cerr << "Son non trouvé: " << id << std::endl;
     }
@@ -89,7 +89,7 @@ Controller::Controller()
         std::cerr << "Aucun joystick connecté sur l'ID 0." << std::endl;
         throw std::runtime_error("Error no controller detected");
     }
-    _loadMusic("horn", "assets/circus_horn.mp3", 50.f);
+    _loadMusic("horn", "assets/circus_horn.mp3", 100.f);
     this->_mThread = std::thread([this]() {
         this->loop();
     });
