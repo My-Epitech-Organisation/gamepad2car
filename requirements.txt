@@ -1,4 +1,0 @@
-pygame>=2.6.0
-git+https://github.com/LiamBindle/PyVESC.git
-pyserial>=3.5
-pythoncrc>=1.2
