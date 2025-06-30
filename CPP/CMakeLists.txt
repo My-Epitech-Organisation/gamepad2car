@@ -1,4 +1,20 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minim# Ajouter l'exécutable d# Lier les bibliothèques SFML pour le test de manette
+target_link_libraries(joystickTest
+    sfml-window
+    pthread)
+
+# Lier les bibliothèques pour le test du Controller
+target_link_libraries(controllerTest
+    sfml-window
+    sfml-audio
+    pthread)st pour la manette
+add_executable(joystickTest
+    joystickHandle.cpp)
+
+# Ajouter l'exécutable de test du Controller
+add_executable(controllerTest
+    joystickTestControl.cpp
+    Controller.cpp)required(VERSION 3.10)
 project(gamepad2car)
 
 find_package(Python3 REQUIRED COMPONENTS Interpreter Development)
