@@ -3,6 +3,7 @@
 import traceback
 import time
 from pyvesc.VESC import VESC
+import subprocess
 
 # --- CONFIGURATION GLOBALE DU ROBOCAR ---
 # Regroupe tous les paramètres pour une importation facile
@@ -184,3 +185,12 @@ class Robocar:
         """Diminue la puissance maximale du moteur"""
         if self.throttle_max_power > 0.0:
             self.throttle_max_power -= 0.1
+
+    def horn(self):
+        """Active le klaxon."""
+        if not self.is_connected: return
+        try:
+            subprocess.run(['/home/epitechrobocar/robocar/Sound-Robocar/startMusic.sh', '/home/epitechrobocar/robocar/Sound-Robocar/assets/circus_horn.wav'],
+                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        except Exception as e:
+            print(f"Erreur lors de l'activation du klaxon: {e}")
