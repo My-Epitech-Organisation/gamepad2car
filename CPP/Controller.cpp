@@ -40,12 +40,12 @@ void Controller::loop()
     }
 }
 
-sf::Music &Controller::_initMusic(const std::string & path, float vol)
+std::unique_ptr<sf::Music> Controller::_initMusic(const std::string & path, float vol)
 {
-    sf::Music music;
+    std::unique_ptr<sf::Music> music = std::make_unique<sf::Music>();
 
-    music.openFromFile(path);
-    music.setVolume(vol);
+    music->openFromFile(path);
+    music->setVolume(vol);
     return music;
 }
 
