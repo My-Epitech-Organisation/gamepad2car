@@ -23,6 +23,11 @@ PyObject* PythonCaller::to_python<double>(const double &value) {
 }
 
 template<>
+PyObject* PythonCaller::to_python<float>(const float &value) {
+    return PyFloat_FromDouble(static_cast<double>(value));
+}
+
+template<>
 PyObject* PythonCaller::to_python<const char*>(const char* const& value) {
     return PyUnicode_FromString(value);
 }
