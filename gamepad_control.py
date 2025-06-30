@@ -12,7 +12,7 @@ from robocar_base import Robocar, ROBOCAR_CONFIG
 
 # --- CONFIGURATION DE LA MANETTE (Style "Jeu de Course") ---
 # Axes (VÉRIFIEZ AVEC LE SCRIPT DE DIAGNOSTIC !)
-STEERING_AXIS = 3  # Joystick DROIT, axe horizontal
+STEERING_AXIS = 0  # Joystick GAUCHE, axe horizontal
 REVERSE_AXIS = 2   # Gâchette GAUCHE (LT)
 FORWARD_AXIS = 5   # Gâchette DROITE (RT)
 
