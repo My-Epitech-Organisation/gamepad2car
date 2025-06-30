@@ -17,5 +17,6 @@ target_link_libraries(gamepad2car
     m
     pthread
     util
-    sfml
+    sfml-audio
+    sfml-window
 )
