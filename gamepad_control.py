@@ -43,7 +43,7 @@ def main():
     print("-------------------------------------------\n")
 
     car = Robocar(**ROBOCAR_CONFIG)
-    
+
     try:
         if not car.connect():
             print("Impossible de démarrer. Vérifiez la connexion VESC.")
@@ -66,7 +66,7 @@ def main():
             # 2. Lire les gâchettes et les convertir en [0.0, 1.0]
             forward_power = (joystick.get_axis(FORWARD_AXIS) + 1) / 2
             reverse_power = (joystick.get_axis(REVERSE_AXIS) + 1) / 2
-            
+
             # 3. Calculer l'accélération finale
             throttle_value = forward_power - reverse_power
 
@@ -82,7 +82,7 @@ def main():
     except Exception as e:
         print(f"\nUne erreur inattendue est survenue: {e}")
     finally:
-        print("\n") 
+        print("\n")
         if car and car.is_connected:
             car.disconnect()
         pygame.quit()
