@@ -8,7 +8,7 @@ from pyvesc.VESC import VESC
 ROBOCAR_CONFIG = {
     'port': '/dev/ttyACM0',
     'baudrate': 115200,
-    'throttle_max': 0.2, # Puissance max moteur (0.0 à 1.0)
+    'throttle_max': 0.1, # Puissance max moteur (0.0 à 1.0)
     'steering_left': 0.0,
     'steering_right': 1.0,
     'steering_center': 0.5
