@@ -92,3 +92,13 @@ class Robocar:
     def center_steering(self):
         """Méthode simple pour remettre les roues droites."""
         self.set_steering(0)
+
+    def incr_throttle_max(self):
+	"""Augmente la puissance maximale du moteur"""
+	if self.throttle_max_power < 1.0:
+	    self.throttle_max_power += 0.1
+
+    def decr_throttle_max(self):
+	"""Diminue la puissance maximale du moteur"""
+	if self.throttle_max_power > 0.0:
+	    self.throttle_max_poser -= 0.1

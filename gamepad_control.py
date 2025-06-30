@@ -18,6 +18,8 @@ FORWARD_AXIS = 5   # Gâchette DROITE (RT)
 
 # Boutons
 EXIT_BUTTON = 8    # Bouton "Start" ou "Logitech"
+SPEED_DOWN = 4
+SPEED_UP = 5
 
 # Zone morte pour la direction afin d'aller bien droit
 JOYSTICK_DEADZONE = 0.1
@@ -54,9 +56,14 @@ def main():
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     running = False
-                if event.type == pygame.JOYBUTTONDOWN and event.button == EXIT_BUTTON:
-                    print("\nBouton de sortie détecté. Arrêt...")
-                    running = False
+                if event.type == pygame.JOYBUTTONDOWN:
+		    if event.button == EXIT_BUTTON:
+                    	print("\nBouton de sortie détecté. Arrêt...")
+                    	running = False
+		    if event.button == SPEED_DOWN:
+			car.decr_throttle_max()
+		    if event.button == SPEED_UP:
+			car.incr_throttle_max()
 
             # 1. Lire la direction depuis le joystick DROIT
             steering_value = joystick.get_axis(STEERING_AXIS)
