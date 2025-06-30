@@ -4,7 +4,7 @@
 echo "=== Update Submodule ==="
 git submodule update --init --recursive
 
-mv setters.py.move PyVESC/pyvesc/VESC/messages/setters.py
+cp setters.py.move PyVESC/pyvesc/VESC/messages/setters.py
 
 ./setup_vesc_environment.sh
 
@@ -31,12 +31,12 @@ fi
 echo ""
 echo "=== Copy bin files ==="
 echo ""
-    cp gamecar2pad ../ && cd ..
+    cp gamepad2car ../ && cd ..
 
 echo ""
 echo "=== Running VESC Control Test ==="
 echo ""
 # Exécution du programme
-./gamecar2pad
+./gamepad2car
 
 exit 0
