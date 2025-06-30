@@ -94,11 +94,11 @@ class Robocar:
         self.set_steering(0)
 
     def incr_throttle_max(self):
-	"""Augmente la puissance maximale du moteur"""
-	if self.throttle_max_power < 1.0:
-	    self.throttle_max_power += 0.1
+        """Augmente la puissance maximale du moteur"""
+        if self.throttle_max_power < 1.0:
+            self.throttle_max_power += 0.1
 
     def decr_throttle_max(self):
-	"""Diminue la puissance maximale du moteur"""
-	if self.throttle_max_power > 0.0:
-	    self.throttle_max_poser -= 0.1
+        """Diminue la puissance maximale du moteur"""
+        if self.throttle_max_power > 0.0:
+            self.throttle_max_power -= 0.1

@@ -40,7 +40,7 @@ def main():
     print("\n--- CONTRÔLES ACTIFS (Style Course v2) ---")
     print(f"Accélération : Gâchette DROITE (RT)")
     print(f"Marche arrière/Frein : Gâchette GAUCHE (LT)")
-    print(f"Direction : Joystick DROIT (gauche/droite)")
+    print(f"Direction : Joystick GAUCHE (gauche/droite)")
     print(f"APPUYER pour quitter : Bouton 'Start' (bouton 8)")
     print("-------------------------------------------\n")
 
@@ -56,14 +56,14 @@ def main():
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     running = False
-                if event.type == pygame.JOYBUTTONDOWN:
-		    if event.button == EXIT_BUTTON:
-                    	print("\nBouton de sortie détecté. Arrêt...")
-                    	running = False
-		    if event.button == SPEED_DOWN:
-			car.decr_throttle_max()
-		    if event.button == SPEED_UP:
-			car.incr_throttle_max()
+                if event.type == pygame.JOYBUTTONDOWN and event.button == EXIT_BUTTON:
+                    print("\nBouton de sortie détecté. Arrêt...")
+                    running = False
+                if event.type == pygame.JOYBUTTONUP:
+                    if event.button == SPEED_DOWN:
+                        car.decr_throttle_max()
+                    if event.button == SPEED_UP:
+                        car.incr_throttle_max()
 
             # 1. Lire la direction depuis le joystick DROIT
             steering_value = joystick.get_axis(STEERING_AXIS)
@@ -78,7 +78,7 @@ def main():
             throttle_value = forward_power - reverse_power
 
             # 4. Afficher les valeurs en temps réel
-            print(f"Accélération: {throttle_value:>6.2f} | Direction: {steering_value:>5.2f}", end='\r')
+            print(f"Accélération: {throttle_value:>6.2f} | Direction: {steering_value:>5.2f}", end="\r")
 
             # 5. Envoyer les commandes à la voiture
             car.set_throttle(throttle_value)
