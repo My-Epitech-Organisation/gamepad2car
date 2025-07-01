@@ -8,7 +8,7 @@ import subprocess
 # --- CONFIGURATION GLOBALE DU ROBOCAR ---
 # Regroupe tous les paramètres pour une importation facile
 ROBOCAR_CONFIG = {
-    'port': '/dev/ttyACM0',
+    'port': '/dev/ttyACM1',
     'baudrate': 115200,
     'throttle_max': 0.1, # Puissance max moteur très réduite pour éviter l'OVP (0.0 à 1.0)
     'steering_left': 0.0,
@@ -188,16 +188,16 @@ class Robocar:
         """Augmente la puissance maximale du moteur"""
         if self.throttle_max_power < 0.5:
             self.throttle_max_power += 0.1
-            vitesse = int(self.throttle_max_power * 10)
-            self.play_sound(f'/home/epitechrobocar/robocar/Sound-Robocar/assets/Vitesse{vitesse}.wav')
+            vitesse = int(self.throttle_max_power * 10) + 1
+            self.play_sound(f'assets/Vitesse{vitesse}.wav')
 
 
     def decr_throttle_max(self):
         """Diminue la puissance maximale du moteur"""
         if self.throttle_max_power > 0.0:
             self.throttle_max_power -= 0.1
-            vitesse = int(self.throttle_max_power * 10)
-            self.play_sound(f'/home/epitechrobocar/robocar/Sound-Robocar/assets/Vitesse{vitesse}.wav')
+            vitesse = int(self.throttle_max_power * 10) + 1
+            self.play_sound(f'assets/Vitesse{vitesse}.wav')
 
     def monitor_power_consumption(self):
         """Surveille la consommation pour prévenir l'OVP."""
@@ -247,15 +247,16 @@ class Robocar:
         """Joue un son spécifique."""
         if not self.is_connected: return
         try:
-            subprocess.run(['/home/epitechrobocar/robocar/Sound-Robocar/startMusic.sh', sound_file],
-                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            subprocess.run(['./startMusic.sh', sound_file],
+                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                cwd='/home/epitechrobocar/robocar/Sound-Robocar')
         except Exception as e:
             print(f"Erreur lors de la lecture du son: {e}")
 
     def horn(self):
         """Active le klaxon."""
         try:
-            self.play_sound('/home/epitechrobocar/robocar/Sound-Robocar/assets/circus_horn.wav')
+            self.play_sound('assets/circus_horn.wav')
         except Exception as e:
             print(f"Erreur lors de l'activation du klaxon: {e}")
 
