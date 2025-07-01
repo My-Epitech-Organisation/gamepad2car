@@ -23,8 +23,8 @@ SPEED_UP = 5
 
 # Zone morte pour la direction afin d'aller bien droit
 JOYSTICK_DEADZONE = 0.1
-# Seuil de détection de changement brusque de throttle
-THROTTLE_CHANGE_THRESHOLD = 0.3
+# Seuil de détection de changement brusque de throttle (plus sensible)
+THROTTLE_CHANGE_THRESHOLD = 0.15  # Réduit de 0.3 à 0.15
 # --------------------------------------------------------
 
 def main():
@@ -56,11 +56,18 @@ def main():
             print("Impossible de démarrer. Vérifiez la connexion VESC.")
             return
 
-        car.set_throttle_smoothing(alpha=0.6, max_change=0.12)
-        print("Lissage de protection activé pour éviter les pics de courant.\n")
+        car.set_throttle_smoothing(alpha=0.2, max_change=0.03)
+        print("🛡️  Protection maximale activée - lissage très agressif pour éviter l'OVP.")
+        print("⚠️  Les commandes seront très lissées pour protéger l'alimentation.\n")
 
         running = True
         while running:
+            # Vérifier si la connexion est perdue (OVP alimentation)
+            if hasattr(car, 'connection_lost') and car.connection_lost:
+                print(f"\n🔌 Connexion perdue - Alimentation probablement en OVP")
+                print("Arrêt du programme pour éviter les erreurs série.")
+                break
+                
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     running = False

@@ -9,7 +9,7 @@ from pyvesc.VESC import VESC
 ROBOCAR_CONFIG = {
     'port': '/dev/ttyACM0',
     'baudrate': 115200,
-    'throttle_max': 0.1, # Puissance max moteur (0.0 à 1.0)
+    'throttle_max': 0.1, # Puissance max moteur très réduite pour éviter l'OVP (0.0 à 1.0)
     'steering_left': 0.0,
     'steering_right': 1.0,
     'steering_center': 0.5
@@ -36,8 +36,10 @@ class Robocar:
         # Variables pour le lissage et la protection
         self.current_throttle = 0.0
         self.previous_throttle = 0.0
-        self.max_throttle_change = 0.15
-        self.throttle_filter_alpha = 0.7
+        self.max_throttle_change = 0.03  # Changement maximum par commande (3% - très conservateur)
+        self.throttle_filter_alpha = 0.2  # Coefficient de lissage (0.2 = très lisse)
+        self.emergency_triggered = False  # Flag pour détecter les situations d'urgence
+        self.connection_lost = False  # Flag pour détecter les pertes de connexion
 
         print("Robocar initialisé. Prêt à se connecter.")
 
@@ -67,28 +69,35 @@ class Robocar:
         if self.is_connected:
             print("Arrêt d'urgence et déconnexion...")
             try:
-                for i in range(5):
-                    try:
-                        self.set_throttle(self.current_throttle * (4-i)/5)
-                        time.sleep(0.05)
-                    except:
-                        break
-
-                self.stop_motor()
-                self.center_steering()
-                time.sleep(0.1)
-                self.vesc.close()
+                # Arrêt immédiat pour éviter que l'alimentation coupe
+                self.vesc.set_duty_cycle(0.0)
+                self.vesc.set_servo(self.steering_center_pos)
+                time.sleep(0.05)  # Très courte pause
+                
+                # Tentative de fermeture propre avec timeout court
+                try:
+                    self.vesc.close()
+                except:
+                    pass  # Ignore les erreurs de fermeture si l'alimentation a coupé
+                    
             except Exception as e:
-                print(f"Erreur lors de la déconnexion: {e}")
+                # Si erreur I/O, l'alimentation a probablement coupé
+                if "Input/output error" in str(e) or "Errno 5" in str(e):
+                    print("Alimentation coupée - connexion perdue")
+                    self.connection_lost = True
+                else:
+                    print(f"Erreur lors de la déconnexion: {e}")
             finally:
                 self.vesc = None
                 self.current_throttle = 0.0
                 self.previous_throttle = 0.0
+                self.emergency_triggered = False
                 print("Déconnecté.")
 
     def set_throttle(self, value):
         """Définit la puissance du moteur avec lissage et protection (-1.0 à 1.0)."""
-        if not self.is_connected: return
+        if not self.is_connected or self.connection_lost: 
+            return
 
         # Borner la valeur d'entrée
         value = max(min(value, 1.0), -1.0)
@@ -114,12 +123,13 @@ class Robocar:
         try:
             self.vesc.set_duty_cycle(duty_cycle)
         except Exception as e:
-            print(f"Erreur lors de l'envoi de la commande moteur: {e}")
-            # Tentative de reconnexion si la connexion est perdue
-            if "Input/output error" in str(e):
-                print("Connexion perdue, tentative de reconnexion...")
-                self.disconnect()
-                time.sleep(0.5)  # Pause avant reconnexion
+            # Si erreur I/O, marquer la connexion comme perdue
+            if "Input/output error" in str(e) or "Errno 5" in str(e):
+                print(f"\n❌ Connexion perdue (OVP alimentation?)")
+                self.connection_lost = True
+                self.emergency_triggered = True
+            else:
+                print(f"Erreur lors de l'envoi de la commande moteur: {e}")
 
     def set_steering(self, value):
         """Définit l'angle de direction (-1.0 à 1.0)."""
@@ -184,3 +194,47 @@ class Robocar:
         """Diminue la puissance maximale du moteur"""
         if self.throttle_max_power > 0.0:
             self.throttle_max_power -= 0.1
+
+    def monitor_power_consumption(self):
+        """Surveille la consommation pour prévenir l'OVP."""
+        if not self.is_connected:
+            return None
+        
+        try:
+            # Essayer de lire les données du VESC
+            current = self.vesc.get_measurements().input_current
+            voltage = self.vesc.get_measurements().input_voltage
+            
+            # Calculer la puissance
+            power = current * voltage
+            
+            # Alerte si proche des limites
+            if current > 3.0:  # Ajustez selon votre alimentation
+                print(f"⚠️  COURANT ÉLEVÉ: {current:.2f}A")
+            if voltage > 12.5:  # Ajustez selon votre alimentation
+                print(f"⚠️  TENSION ÉLEVÉE: {voltage:.2f}V")
+                
+            return {
+                'current': current,
+                'voltage': voltage,
+                'power': power
+            }
+        except Exception as e:
+            # Ignore silencieusement les erreurs de lecture
+            return None
+
+    def get_safe_throttle_increment(self):
+        """Retourne un incrément de throttle sûr basé sur l'état actuel."""
+        # Incrément encore plus conservateur si on détecte des problèmes
+        base_increment = self.max_throttle_change
+        
+        if hasattr(self, 'connection_lost') and self.connection_lost:
+            return 0.0  # Pas d'augmentation si connexion perdue
+        
+        # Réduire l'incrément si le throttle actuel est déjà élevé
+        if abs(self.current_throttle) > 0.3:
+            return base_increment * 0.5  # Moitié moins rapide
+        elif abs(self.current_throttle) > 0.5:
+            return base_increment * 0.25  # Encore plus lent
+        
+        return base_increment
