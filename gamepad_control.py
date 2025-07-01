@@ -45,7 +45,8 @@ def main():
     print(f"Marche arrière/Frein : Gâchette GAUCHE (LT)")
     print(f"Direction : Joystick GAUCHE (gauche/droite)")
     print(f"Klaxon : Bouton Y (bouton 3)")
-    print(f"UP : Bouton UP (bouton le D-Pad UP")
+    print(f"Epitech : Bouton UP (bouton le D-Pad UP)")
+    print(f"Satelisation : Bouton DOWN (bouton le D-Pad DOWN)")
     print(f"APPUYER pour quitter : Bouton 'Start' (bouton 8)")
     print("-------------------------------------------\n")
 
@@ -84,6 +85,8 @@ def main():
                     hat_x, hat_y = joystick.get_hat(0)
                     if hat_y == 1:
                         car.play_sound("assets/EpitechPassion.wav")
+                    elif hat_y == -1:
+                        car.play_sound("assets/Satelisation.wav")
 
             # 1. Lire la direction depuis le joystick DROIT
             steering_value = joystick.get_axis(STEERING_AXIS)
