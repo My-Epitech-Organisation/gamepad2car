@@ -50,9 +50,6 @@ def main():
 
     car = Robocar(**ROBOCAR_CONFIG)
 
-    previous_throttle = 0.0
-    sudden_change_count = 0
-
     try:
         if not car.connect():
             print("Impossible de démarrer. Vérifiez la connexion VESC.")
@@ -96,21 +93,10 @@ def main():
             # 3. Calculer l'accélération finale
             throttle_value = forward_power - reverse_power
 
-            # 4. Détecter les changements brusques qui peuvent causer des pics
-            throttle_change = abs(throttle_value - previous_throttle)
-            if throttle_change > THROTTLE_CHANGE_THRESHOLD:
-                sudden_change_count += 1
-                if sudden_change_count > 3:  # Plus de 3 changements brusques
-                    print(f"\n⚠️  ATTENTION: Changements brusques détectés! Réduisez la vitesse de manœuvre.")
-                    sudden_change_count = 0  # Reset du compteur
-            else:
-                sudden_change_count = max(0, sudden_change_count - 1)  # Diminue progressivement
+            # 4. Afficher les valeurs en temps réel avec statut de protection
+            print(f"Accél: {throttle_value:>6.2f} | Dir: {steering_value:>5.2f} | Max: {car.throttle_max_power:.1f}", end="\r")
 
-            # 5. Afficher les valeurs en temps réel avec statut de protection
-            status_icon = "🔒" if throttle_change > THROTTLE_CHANGE_THRESHOLD else "✅"
-            print(f"{status_icon} Accél: {throttle_value:>6.2f} | Dir: {steering_value:>5.2f} | Max: {car.throttle_max_power:.1f}", end="\r")
-
-            # 6. Envoyer les commandes à la voiture
+            # 5. Envoyer les commandes à la voiture
             car.set_throttle(throttle_value)
             car.set_steering(steering_value)
             
