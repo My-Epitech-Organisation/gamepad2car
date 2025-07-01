@@ -50,8 +50,6 @@ def main():
     print("-------------------------------------------\n")
 
     car = Robocar(**ROBOCAR_CONFIG)
-    car.play_sound("assets/intro.wav")
-    car.play_sound("assets/Vitesse1.wav")
 
     try:
         if not car.connect():
@@ -61,6 +59,7 @@ def main():
         car.set_throttle_smoothing(alpha=0.2, max_change=0.03)
 
         running = True
+        car.play_sound("assets/intro.wav")
         while running:
             # Vérifier si la connexion est perdue (OVP alimentation)
             if hasattr(car, 'connection_lost') and car.connection_lost:
