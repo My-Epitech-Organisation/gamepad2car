@@ -239,7 +239,7 @@ class Robocar:
     def horn(self):
         """Active le klaxon."""
         try:
-            self.play_sound('assets/circus_horn.wav')
+            self.play_sound('assets/klaxon.wav')
         except Exception as e:
             print(f"Erreur lors de l'activation du klaxon: {e}")
 
