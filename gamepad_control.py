@@ -56,8 +56,6 @@ def main():
             return
 
         car.set_throttle_smoothing(alpha=0.2, max_change=0.03)
-        print("🛡️  Protection maximale activée - lissage très agressif pour éviter l'OVP.")
-        print("⚠️  Les commandes seront très lissées pour protéger l'alimentation.\n")
 
         running = True
         while running:
@@ -100,7 +98,6 @@ def main():
             car.set_throttle(throttle_value)
             car.set_steering(steering_value)
             
-            previous_throttle = throttle_value
             time.sleep(0.02)
 
     except Exception as e:
