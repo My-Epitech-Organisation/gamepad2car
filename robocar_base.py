@@ -188,7 +188,7 @@ class Robocar:
         """Augmente la puissance maximale du moteur"""
         if self.throttle_max_power < 0.5:
             self.throttle_max_power += 0.1
-            vitesse = int(self.throttle_max_power * 10) + 1
+            vitesse = int(self.throttle_max_power * 10)
             self.play_sound(f'assets/Vitesse{vitesse}.wav')
 
 
@@ -196,7 +196,7 @@ class Robocar:
         """Diminue la puissance maximale du moteur"""
         if self.throttle_max_power > 0.0:
             self.throttle_max_power -= 0.1
-            vitesse = int(self.throttle_max_power * 10) + 1
+            vitesse = int(self.throttle_max_power * 10)
             self.play_sound(f'assets/Vitesse{vitesse}.wav')
 
     def monitor_power_consumption(self):
