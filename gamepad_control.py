@@ -18,6 +18,7 @@ FORWARD_AXIS = 5   # Gâchette DROITE (RT)
 
 # Boutons
 EXIT_BUTTON = 8    # Bouton "Start" ou "Logitech"
+KLAXON_BUTTON = 3   # Bouton Y (Klaxon)
 SPEED_DOWN = 4
 SPEED_UP = 5
 
@@ -43,6 +44,7 @@ def main():
     print(f"Accélération : Gâchette DROITE (RT)")
     print(f"Marche arrière/Frein : Gâchette GAUCHE (LT)")
     print(f"Direction : Joystick GAUCHE (gauche/droite)")
+    print(f"Klaxon : Bouton Y (bouton 3)")
     print(f"APPUYER pour quitter : Bouton 'Start' (bouton 8)")
     print("-------------------------------------------\n")
 
@@ -79,6 +81,8 @@ def main():
                         car.decr_throttle_max()
                     if event.button == SPEED_UP:
                         car.incr_throttle_max()
+                if joystick.get_button(KLAXON_BUTTON):
+                    car.horn()
 
             # 1. Lire la direction depuis le joystick DROIT
             steering_value = joystick.get_axis(STEERING_AXIS)
