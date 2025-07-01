@@ -8,7 +8,7 @@ import subprocess
 # --- CONFIGURATION GLOBALE DU ROBOCAR ---
 # Regroupe tous les paramètres pour une importation facile
 ROBOCAR_CONFIG = {
-    'port': '/dev/ttyACM0',
+    'port': '/dev/ttyACM1',
     'baudrate': 115200,
     'throttle_max': 0.1, # Puissance max moteur très réduite pour éviter l'OVP (0.0 à 1.0)
     'steering_left': 0.0,
