@@ -71,8 +71,8 @@ class Robocar:
             print("Arrêt d'urgence et déconnexion...")
             try:
                 # Arrêt immédiat pour éviter que l'alimentation coupe
-                self.vesc.set_duty_cycle(0.0)
-                self.vesc.set_servo(self.steering_center_pos)
+                self._safe_vesc_command(self.vesc.set_duty_cycle, 0.0)
+                self._safe_vesc_command(self.vesc.set_servo, self.steering_center_pos)
                 time.sleep(0.05)  # Très courte pause
                 
                 # Tentative de fermeture propre avec timeout court
@@ -120,27 +120,23 @@ class Robocar:
 
         # Calculer et envoyer la commande au VESC
         duty_cycle = self.throttle_max_power * filtered_value
-
-        try:
-            self.vesc.set_duty_cycle(duty_cycle)
-        except Exception as e:
-            # Si erreur I/O, marquer la connexion comme perdue
-            if "Input/output error" in str(e) or "Errno 5" in str(e):
-                print(f"\n❌ Connexion perdue (OVP alimentation?)")
-                self.connection_lost = True
-                self.emergency_triggered = True
-            else:
-                print(f"Erreur lors de l'envoi de la commande moteur: {e}")
+        
+        # Utiliser la méthode sécurisée pour envoyer la commande
+        self._safe_vesc_command(self.vesc.set_duty_cycle, duty_cycle)
 
     def set_steering(self, value):
         """Définit l'angle de direction (-1.0 à 1.0)."""
-        if not self.is_connected: return
+        if not self.is_connected or self.connection_lost: 
+            return
+            
         value = max(min(value, 1.0), -1.0) # borner la valeur
         if value < 0:
             servo_pos = self.steering_center_pos + value * (self.steering_center_pos - self.steering_left_limit)
         else:
             servo_pos = self.steering_center_pos + value * (self.steering_right_limit - self.steering_center_pos)
-        self.vesc.set_servo(servo_pos)
+        
+        # Utiliser la méthode sécurisée pour envoyer la commande
+        self._safe_vesc_command(self.vesc.set_servo, servo_pos)
 
     def stop_motor(self):
         """Méthode simple pour arrêter le moteur progressivement."""
@@ -155,12 +151,14 @@ class Robocar:
 
     def emergency_stop(self):
         """Arrêt d'urgence immédiat (peut causer des pics de courant)."""
-        if not self.is_connected: return
-        try:
-            self.vesc.set_duty_cycle(0)
+        if not self.is_connected: 
+            return
+            
+        success = self._safe_vesc_command(self.vesc.set_duty_cycle, 0)
+        if success:
             self.current_throttle = 0.0
-        except Exception as e:
-            print(f"Erreur lors de l'arrêt d'urgence: {e}")
+        else:
+            print("Erreur lors de l'arrêt d'urgence")
 
     def center_steering(self):
         """Méthode simple pour remettre les roues droites."""
@@ -261,3 +259,33 @@ class Robocar:
             self.play_sound('assets/circus_horn.wav')
         except Exception as e:
             print(f"Erreur lors de l'activation du klaxon: {e}")
+
+    def _safe_vesc_command(self, command_func, *args, **kwargs):
+        """Exécute une commande VESC de manière sécurisée avec gestion d'erreur.
+        
+        Args:
+            command_func: La fonction VESC à appeler
+            *args: Arguments positionnels pour la fonction
+            **kwargs: Arguments nommés pour la fonction
+            
+        Returns:
+            True si la commande a réussi, False sinon
+        """
+        if not self.is_connected or self.connection_lost:
+            return False
+            
+        try:
+            command_func(*args, **kwargs)
+            return True
+        except (ValueError, TypeError) as parse_error:
+            print(f"Erreur de parsing VESC: {parse_error}")
+            return False
+        except Exception as e:
+            # Si erreur I/O, marquer la connexion comme perdue
+            if "Input/output error" in str(e) or "Errno 5" in str(e):
+                print(f"\n❌ Connexion perdue (OVP alimentation?)")
+                self.connection_lost = True
+                self.emergency_triggered = True
+            else:
+                print(f"Erreur lors de l'envoi de la commande VESC: {e}")
+            return False
