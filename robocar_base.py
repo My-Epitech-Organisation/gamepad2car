@@ -230,7 +230,7 @@ class Robocar:
         """Joue un son spécifique."""
         if not self.is_connected: return
         try:
-            subprocess.run(['./startMusic.sh', sound_file],
+            subprocess.Popen(['./startMusic.sh', sound_file],
                 stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
                 cwd='/home/epitechrobocar/robocar/Sound-Robocar')
         except Exception as e:
