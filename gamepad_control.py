@@ -70,21 +70,26 @@ def main():
                 print("Arrêt du programme pour éviter les erreurs série.")
                 break
 
+            previous_hat = (0, 0)
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     running = False
-                if event.type == pygame.JOYBUTTONDOWN and event.button == EXIT_BUTTON:
-                    print("\nBouton de sortie détecté. Arrêt...")
-                    running = False
-                if event.type == pygame.JOYBUTTONUP:
+                elif event.type == pygame.JOYBUTTONDOWN:
+                    if event.button == EXIT_BUTTON:
+                        print("\nBouton de sortie détecté. Arrêt...")
+                        running = False
+                elif event.type == pygame.JOYBUTTONUP:
                     if event.button == SPEED_DOWN:
                         car.decr_throttle_max()
-                    if event.button == SPEED_UP:
+                    elif event.button == SPEED_UP:
                         car.incr_throttle_max()
-                if joystick.get_button(KLAXON_BUTTON):
-                    car.horn()
-                if joystick.get_numhats() > 0:
-                    hat_x, hat_y = joystick.get_hat(0)
+
+            if joystick.get_button(KLAXON_BUTTON):
+                car.horn()
+
+            if joystick.get_numhats() > 0:
+                hat_x, hat_y = joystick.get_hat(0)
+                if (hat_x, hat_y) != previous_hat:
                     if hat_y == 1:
                         car.play_sound("assets/EpitechPassion.wav")
                     elif hat_y == -1:
@@ -93,6 +98,7 @@ def main():
                         car.play_sound("assets/Peter.wav")
                     elif hat_x == -1:
                         car.play_sound("assets/Polizia.wav")
+                    previous_hat = (hat_x, hat_y)
 
             # 1. Lire la direction depuis le joystick DROIT
             steering_value = joystick.get_axis(STEERING_AXIS)
