@@ -186,7 +186,7 @@ class Robocar:
 
     def incr_throttle_max(self):
         """Augmente la puissance maximale du moteur"""
-        if self.throttle_max_power < 0.5:
+        if int(self.throttle_max_power * 10) < 5:
             self.throttle_max_power += 0.1
             vitesse = int(self.throttle_max_power * 10)
             self.play_sound(f'assets/Vitesse{vitesse}.wav')
@@ -194,7 +194,7 @@ class Robocar:
 
     def decr_throttle_max(self):
         """Diminue la puissance maximale du moteur"""
-        if self.throttle_max_power > 0.0:
+        if int(self.throttle_max_power * 10) > 0:
             self.throttle_max_power -= 0.1
             vitesse = int(self.throttle_max_power * 10) + 1
             self.play_sound(f'assets/Vitesse{vitesse}.wav')
