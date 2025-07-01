@@ -50,6 +50,8 @@ def main():
     print("-------------------------------------------\n")
 
     car = Robocar(**ROBOCAR_CONFIG)
+    car.play_sound("assets/intro.wav")
+    car.play_sound("assets/Vitesse1.wav")
 
     try:
         if not car.connect():
