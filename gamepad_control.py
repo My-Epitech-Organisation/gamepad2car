@@ -19,7 +19,7 @@ FORWARD_AXIS = 5   # Gâchette DROITE (RT)
 # Boutons
 EXIT_BUTTON = 8    # Bouton "Start" ou "Logitech"
 KLAXON_BUTTON = 3   # Bouton Y (Klaxon)
-UP_BUTTON = 4
+PAD_UP = 12  # Bouton UP (Pad)
 SPEED_DOWN = 4
 SPEED_UP = 5
 
@@ -46,7 +46,7 @@ def main():
     print(f"Marche arrière/Frein : Gâchette GAUCHE (LT)")
     print(f"Direction : Joystick GAUCHE (gauche/droite)")
     print(f"Klaxon : Bouton Y (bouton 3)")
-    print(f"UP : Bouton UP (bouton 4)")
+    print(f"UP : Bouton UP (bouton 12)")
     print(f"APPUYER pour quitter : Bouton 'Start' (bouton 8)")
     print("-------------------------------------------\n")
 
@@ -80,7 +80,7 @@ def main():
                         car.incr_throttle_max()
                 if joystick.get_button(KLAXON_BUTTON):
                     car.horn()
-                if joystick.get_button(UP_BUTTON):
+                if joystick.get_button(PAD_UP):
                     car.play_sound("assets/EpitechPassion.wav")
 
             # 1. Lire la direction depuis le joystick DROIT
