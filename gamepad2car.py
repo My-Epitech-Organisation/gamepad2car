@@ -12,7 +12,7 @@ import time
 os.environ["SDL_DBUS_SCREENSAVER_INHIBIT"] = "0"
 
 import pygame
-from play import play
+from playsound import playsound
 import serial.tools.list_ports
 from serial import Serial, SerialException
 import pyvesc
@@ -125,7 +125,7 @@ class GamepadController:
         """Play the horn sound effect"""
         if self.horn_available:
             try:
-                play(self.horn_path)
+                playsound(self.horn_path)
                 print(f"{Colors.CYAN}🔊 BEEP BEEP! 🔊{Colors.RESET}")
                 logging.debug("Horn sound played")
             except Exception as e:
