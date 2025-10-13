@@ -8,7 +8,7 @@ import subprocess
 # --- CONFIGURATION GLOBALE DU ROBOCAR ---
 # Regroupe tous les paramètres pour une importation facile
 ROBOCAR_CONFIG = {
-    'port': '/dev/ttyACM1',
+    'port': '/dev/ttyACM0',
     'baudrate': 115200,
     'throttle_max': 0.1, # Puissance max moteur (0.0 à 1.0, capé à 0.5)
     'steering_left': 0.0,
@@ -232,7 +232,7 @@ class Robocar:
         try:
             subprocess.Popen(['./startMusic.sh', sound_file],
                 stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
-                cwd='/home/epitechrobocar/robocar/Sound-Robocar')
+                cwd='/root/Sound-Robocar')
         except Exception as e:
             print(f"Erreur lors de la lecture du son: {e}")
 
