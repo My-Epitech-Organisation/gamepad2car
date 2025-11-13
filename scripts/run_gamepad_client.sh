@@ -19,6 +19,7 @@ sudo docker run -it --rm \
     --device /dev/input:/dev/input \
     --network host \
     --name gamepad-client \
-    -v $(pwd)/config:/app/config:ro \
+    -v $(pwd):/app \
+    -w /app \
     gamepad2car-base python3 clients/gamepad_client.py --server-ip $SERVER_IP
 

@@ -22,7 +22,7 @@ sudo docker run -it --rm \
     --network host \
     --group-add $(getent group audio | cut -d: -f3) \
     --name robocar-server \
-    -v $(pwd)/config:/app/config:ro \
-    -v $(pwd)/logs:/app/logs \
+    -v $(pwd):/app \
+    -w /app \
     gamepad2car-base python3 server/robocar_server.py
 

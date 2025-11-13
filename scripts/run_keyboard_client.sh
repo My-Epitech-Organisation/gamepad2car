@@ -12,7 +12,8 @@ echo "Serveur: $SERVER_IP"
 sudo docker run -it --rm \
     --network host \
     --name keyboard-client \
-    -v $(pwd)/config:/app/config:ro \
+    -v $(pwd):/app \
+    -w /app \
     -v /dev/input:/dev/input:ro \
     --privileged \
     gamepad2car-base python3 clients/keyboard_client.py --server-ip $SERVER_IP
