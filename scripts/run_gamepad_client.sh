@@ -9,17 +9,25 @@ if [ ! -e /dev/input/js0 ]; then
     exit 1
 fi
 
-# Adresse IP du serveur (peut être passée en argument)
-SERVER_IP="${1:-127.0.0.1}"
+# Lire l'IP du serveur depuis config/client_config.yaml ou utiliser argument
+if [ -n "$1" ]; then
+    SERVER_IP="$1"
+elif [ -f config/client_config.yaml ]; then
+    SERVER_IP=$(grep 'server_ip:' config/client_config.yaml | awk '{print $2}')
+    echo "📝 IP du serveur depuis config: $SERVER_IP"
+else
+    SERVER_IP="127.0.0.1"
+fi
 
 echo "Serveur: $SERVER_IP"
 
-# Lance le conteneur Docker
-sudo docker run -it --rm \
+# Lance le conteneur Docker (sans sudo pour éviter les problèmes de permissions)
+# Le flag :z permet à Docker de relabeler les fichiers pour SELinux
+docker run -it --rm \
     --device /dev/input:/dev/input \
     --network host \
     --name gamepad-client \
-    -v $(pwd):/app \
+    -v $(pwd):/app:z \
     -w /app \
     gamepad2car-base python3 clients/gamepad_client.py --server-ip $SERVER_IP
 
