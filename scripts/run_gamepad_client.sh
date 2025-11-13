@@ -23,10 +23,12 @@ echo "Serveur: $SERVER_IP"
 
 # Lance le conteneur Docker (sans sudo pour éviter les problèmes de permissions)
 # Le flag :z permet à Docker de relabeler les fichiers pour SELinux
+# SDL_VIDEODRIVER=dummy permet à Pygame de fonctionner sans display X11
 docker run -it --rm \
     --device /dev/input:/dev/input \
     --network host \
     --name gamepad-client \
+    -e SDL_VIDEODRIVER=dummy \
     -v $(pwd):/app:z \
     -w /app \
     gamepad2car-base python3 clients/gamepad_client.py --server-ip $SERVER_IP
