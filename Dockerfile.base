@@ -25,7 +25,10 @@ COPY . /app
 RUN pip install --upgrade pip setuptools wheel \
  && pip install -r requirements.txt
 
+# Exposer les ports UDP pour communication réseau
+EXPOSE 5000/udp 5001/udp
+
 RUN cd ~ && git clone https://github.com/nduboi/Sound-Robocar.git && cd Sound-Robocar && pip install -r requirements.txt
 
-#CMD ["python3", "gamepad_control.py"]
-CMD ["/bin/bash"]
+# Par défaut, lancer le serveur (peut être overridé)
+CMD ["python3", "server/robocar_server.py"]
