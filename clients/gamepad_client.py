@@ -174,6 +174,10 @@ class GamepadClient(BaseClient):
         
         try:
             while running and self.connected:
+                # CRITIQUE: Forcer pygame à actualiser l'état des joysticks
+                # Sans cela, get_axis() retourne toujours 0 dans Docker
+                pygame.event.pump()
+                
                 # Traiter événements Pygame
                 for event in pygame.event.get():
                     if event.type == pygame.QUIT:
