@@ -1,0 +1,23 @@
+client:
+  server_ip: 127.0.0.1          # localhost pour tests
+  control_port: 5000
+  telemetry_port: 5001
+  reconnect_timeout_s: 5
+  heartbeat_interval_ms: 100
+  request_timeout_s: 2
+  
+gamepad:
+  steering_axis: 0
+  forward_axis: 5
+  reverse_axis: 2
+  exit_button: 8
+  klaxon_button: 3
+  speed_up_button: 5
+  speed_down_button: 4
+  joystick_deadzone: 0.1
+  
+keyboard:
+  throttle_increment: 0.05
+  steering_value: 0.5
+  smooth_release_time_s: 0.5
+  repeat_delay_ms: 50
