@@ -1,0 +1,28 @@
+server:
+  control_port: 5000
+  telemetry_port: 5001
+  telemetry_rate_hz: 20
+  bind_address: "0.0.0.0"  # Écoute sur toutes les interfaces
+  
+safety:
+  watchdog_timeout_ms: 500      # Début ralentissement
+  emergency_stop_timeout_ms: 1000
+  max_throttle_limit: 0.5
+  
+robocar:
+  port: /dev/ttyACM0
+  baudrate: 115200
+  throttle_max: 0.1
+  steering_left: 0.0
+  steering_right: 1.0
+  steering_center: 0.5
+  throttle_smoothing_alpha: 0.2
+  throttle_max_change: 0.03
+  
+logging:
+  enable: true
+  level: INFO                   # DEBUG, INFO, WARNING, ERROR
+  log_commands: true
+  log_telemetry: false          # Verbose!
+  log_file: logs/server_{date}.log
+  session_log_file: logs/session_{date}.jsonl  # Pour replay
