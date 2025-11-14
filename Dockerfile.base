@@ -16,6 +16,12 @@ RUN apt-get update && apt-get install -y \
     libportaudio2 \
     libportaudiocpp0 \
     portaudio19-dev \
+    xvfb \
+    x11-utils \
+    libsdl2-2.0-0 \
+    libsdl2-image-2.0-0 \
+    libsdl2-mixer-2.0-0 \
+    libsdl2-ttf-2.0-0 \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app

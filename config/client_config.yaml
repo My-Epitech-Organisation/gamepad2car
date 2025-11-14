@@ -1,5 +1,5 @@
 client:
-  server_ip: 127.0.0.1          # localhost pour tests
+  server_ip: 10.93.91.14
   control_port: 5000
   telemetry_port: 5001
   reconnect_timeout_s: 5
