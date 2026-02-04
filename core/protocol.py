@@ -168,23 +168,25 @@ def create_telemetry_message(
     throttle_max: float,
     battery_voltage: Optional[float] = None,
     battery_current: Optional[float] = None,
+    motor_rpm: Optional[float] = None,
     connection_status: str = "ok",
     active_client: Optional[str] = None,
     uptime: float = 0.0
 ) -> str:
     """
     Crée un message de télémétrie.
-    
+
     Args:
         current_throttle: Throttle actuel
         current_steering: Steering actuel
         throttle_max: Puissance max configurée
         battery_voltage: Tension batterie (V)
         battery_current: Courant batterie (A)
+        motor_rpm: RPM moteur VESC
         connection_status: État connexion ("ok", "degraded", "lost")
         active_client: ID du client actif
         uptime: Temps depuis démarrage serveur (s)
-        
+
     Returns:
         Message JSON encodé
     """
@@ -198,12 +200,13 @@ def create_telemetry_message(
             'throttle_max': round(throttle_max, 2),
             'battery_voltage': round(battery_voltage, 2) if battery_voltage else None,
             'battery_current': round(battery_current, 2) if battery_current else None,
+            'motor_rpm': round(motor_rpm, 1) if motor_rpm is not None else None,
             'connection_status': connection_status,
             'active_client': active_client,
             'uptime': round(uptime, 1)
         }
     }
-    
+
     return json.dumps(message)
 
 

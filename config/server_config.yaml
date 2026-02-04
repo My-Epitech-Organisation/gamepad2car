@@ -12,12 +12,15 @@ safety:
 robocar:
   port: /dev/ttyACM0
   baudrate: 115200
-  throttle_max: 0.1
+  throttle_max: 0.4
   steering_left: 0.0
   steering_right: 1.0
   steering_center: 0.5
-  throttle_smoothing_alpha: 0.2
-  throttle_max_change: 0.03
+  throttle_smoothing_alpha: 0.4
+  throttle_max_change: 0.05
+  kick_start_duty: 0.25
+  kick_start_duration_ms: 150
+  dead_zone_threshold: 0.05
   
 logging:
   enable: true

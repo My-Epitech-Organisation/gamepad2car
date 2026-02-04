@@ -22,7 +22,8 @@ class Robocar:
     Une classe pour contrôler la voiture. Elle gère la connexion au VESC
     et fournit des méthodes simples pour le mouvement.
     """
-    def __init__(self, port, baudrate, throttle_max, steering_left, steering_right, steering_center):
+    def __init__(self, port, baudrate, throttle_max, steering_left, steering_right, steering_center,
+                 kick_start_duty=0.25, kick_start_duration_ms=150, dead_zone_threshold=0.05):
         """Initialise le Robocar avec ses paramètres."""
         self.port = port
         self.baudrate = baudrate
@@ -42,12 +43,37 @@ class Robocar:
         self.emergency_triggered = False
         self.connection_lost = False
 
+        # Kick start / dead zone compensation
+        self._kick_start_duty = kick_start_duty
+        self._kick_start_duration = kick_start_duration_ms / 1000.0
+        self._dead_zone_threshold = dead_zone_threshold
+        self._kick_start_active = False
+        self._kick_start_time = 0.0
+        self._last_rpm = 0.0
+        self._last_rpm_time = 0.0
+        self._rpm_read_interval = 0.1  # 10 Hz
+
         print("Robocar initialisé. Prêt à se connecter.")
 
     @property
     def is_connected(self):
         """Vérifie si le VESC est actuellement connecté."""
         return self.vesc is not None
+
+    def get_rpm(self):
+        """Lit le RPM moteur depuis le VESC (cache a 10 Hz pour eviter surcharge serie)."""
+        if not self.is_connected or self.connection_lost:
+            return self._last_rpm
+        now = time.time()
+        if now - self._last_rpm_time >= self._rpm_read_interval:
+            try:
+                measurements = self.vesc.get_measurements()
+                if measurements and hasattr(measurements, 'rpm'):
+                    self._last_rpm = measurements.rpm
+                self._last_rpm_time = now
+            except Exception:
+                pass
+        return self._last_rpm
 
     def connect(self):
         """Tente de se connecter au VESC."""
@@ -112,6 +138,18 @@ class Robocar:
         self.current_throttle = filtered_value
 
         duty_cycle = self.throttle_max_power * filtered_value
+
+        # Kick start: boost impulse when motor is stalled but throttle requested
+        if abs(duty_cycle) > self._dead_zone_threshold and abs(self.get_rpm()) < 50:
+            if not self._kick_start_active:
+                self._kick_start_active = True
+                self._kick_start_time = time.time()
+            elapsed = time.time() - self._kick_start_time
+            if elapsed < self._kick_start_duration:
+                sign = 1.0 if duty_cycle > 0 else -1.0
+                duty_cycle = sign * max(abs(duty_cycle), self._kick_start_duty)
+        else:
+            self._kick_start_active = False
 
         self._safe_vesc_command(self.vesc.set_duty_cycle, duty_cycle)
 

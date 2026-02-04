@@ -107,11 +107,12 @@ class TelemetryPublisher:
                 'throttle_max': self.robocar.throttle_max_power,
                 'battery_voltage': None,
                 'battery_current': None,
+                'motor_rpm': None,
                 'connection_status': "ok",
                 'active_client': self.active_client_id,
                 'uptime': time.time() - self.start_time
             }
-            
+
             # Essayer de récupérer les mesures VESC
             if self.robocar.is_connected:
                 try:
@@ -120,6 +121,9 @@ class TelemetryPublisher:
                     data['battery_current'] = measurements.input_current
                 except:
                     pass  # Mesures VESC pas disponibles, on continue
+
+                # RPM via la methode cached de Robocar
+                data['motor_rpm'] = self.robocar.get_rpm()
                 
                 # Vérifier l'état de connexion
                 if hasattr(self.robocar, 'connection_lost') and self.robocar.connection_lost:
@@ -139,6 +143,7 @@ class TelemetryPublisher:
                 'throttle_max': 0.0,
                 'battery_voltage': None,
                 'battery_current': None,
+                'motor_rpm': None,
                 'connection_status': "error",
                 'active_client': None,
                 'uptime': 0.0
@@ -166,6 +171,7 @@ class TelemetryPublisher:
                     throttle_max=telemetry_data['throttle_max'],
                     battery_voltage=telemetry_data['battery_voltage'],
                     battery_current=telemetry_data['battery_current'],
+                    motor_rpm=telemetry_data.get('motor_rpm'),
                     connection_status=telemetry_data['connection_status'],
                     active_client=telemetry_data['active_client'],
                     uptime=telemetry_data['uptime']

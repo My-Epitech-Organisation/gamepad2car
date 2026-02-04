@@ -75,7 +75,10 @@ class RobocarServer:
             'throttle_max': robocar_cfg.get('throttle_max', 0.1),
             'steering_left': robocar_cfg.get('steering_left', 0.0),
             'steering_right': robocar_cfg.get('steering_right', 1.0),
-            'steering_center': robocar_cfg.get('steering_center', 0.5)
+            'steering_center': robocar_cfg.get('steering_center', 0.5),
+            'kick_start_duty': robocar_cfg.get('kick_start_duty', 0.25),
+            'kick_start_duration_ms': robocar_cfg.get('kick_start_duration_ms', 150),
+            'dead_zone_threshold': robocar_cfg.get('dead_zone_threshold', 0.05),
         }
 
         # Initialiser Robocar
