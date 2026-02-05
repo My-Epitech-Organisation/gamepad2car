@@ -140,7 +140,8 @@ class Robocar:
         duty_cycle = self.throttle_max_power * filtered_value
 
         # Kick start: boost impulse when motor is stalled but throttle requested
-        if abs(duty_cycle) > self._dead_zone_threshold and abs(self.get_rpm()) < 50:
+        # Only if user is actively requesting throttle (not during smoothing decay)
+        if abs(value) > 0.05 and abs(duty_cycle) > self._dead_zone_threshold and abs(self.get_rpm()) < 50:
             if not self._kick_start_active:
                 self._kick_start_active = True
                 self._kick_start_time = time.time()
